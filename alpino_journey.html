@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpino · Your Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
+  --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
+  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
+  --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
+  --white:#FDFAF5;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
+.nav-logo em{color:var(--amber);font-style:normal;}
+.nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;}
+.nav-streak .fire{font-size:14px;}
+.journey-header{background:var(--ink);padding:48px 40px 40px;position:relative;overflow:hidden;}
+.jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
+.jh-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:12px;}
+.jh-h{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:0.9;letter-spacing:1px;margin-bottom:8px;}
+.jh-h em{color:var(--amber);font-style:normal;}
+.jh-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.4);letter-spacing:2px;}
+.streak-section{background:var(--amber);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.streak-main{display:flex;align-items:flex-end;gap:16px;}
+.streak-num{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--ink);line-height:0.85;}
+.streak-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.streak-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);line-height:1;letter-spacing:1px;}
+.streak-msg{font-size:13px;color:rgba(28,28,26,0.65);margin-top:6px;max-width:260px;line-height:1.6;}
+.streak-broken{background:var(--ink);color:var(--amber);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-top:8px;display:inline-block;}
+.streak-fire{font-size:48px;opacity:0.3;}
+.progress-section{background:var(--cream);padding:40px;}
+.ps-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.ps-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:24px;line-height:1;}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.day-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.day-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;position:relative;transition:all 0.2s;}
+.day-circle.done{background:var(--amber);color:var(--white);}
+.day-circle.done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--green);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.today-active{background:var(--green);color:var(--white);box-shadow:0 0 0 3px var(--green-lt);cursor:pointer;}
+.day-circle.today-active:hover{background:var(--green-dk);}
+.day-circle.locked{background:var(--cream-border);color:var(--ink-lt);cursor:not-allowed;}
+.day-circle.today-done{background:var(--green);color:var(--white);}
+.day-circle.today-done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--amber);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.missed{background:var(--cream-border);color:var(--ink-lt);opacity:0.5;}
+.day-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;text-align:center;}
+.day-label.active-label{color:var(--green-dk);font-weight:700;}
+.progress-bar-wrap{margin:20px 0 8px;background:var(--cream-border);height:6px;position:relative;}
+.progress-bar-fill{height:100%;background:var(--amber);transition:width 0.6s ease;}
+.progress-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:right;margin-top:4px;}
+.today-section{background:var(--cream-dk);padding:40px;}
+.ts-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.ts-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
+.ts-status-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.ts-status-dot{width:10px;height:10px;border-radius:50%;}
+.ts-status-dot.green{background:var(--green);}
+.ts-status-dot.amber{background:var(--amber);}
+.ts-status-dot.red{background:#c0392b;}
+.ts-status-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--ink-md);}
+.action-box{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;margin-bottom:20px;}
+.action-box-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
+.action-box-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.2;}
+.mark-btn{width:100%;background:var(--green);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
+.mark-btn:hover{background:var(--green-dk);}
+.already-done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:14px;background:var(--green-lt);}
+
+/* ─── NEXT ACTION HOOK ─── */
+.next-section{background:var(--cream);padding:40px;}
+.next-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.next-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:20px;line-height:1;}
+.next-card{border:1px solid var(--cream-border);padding:24px;display:flex;gap:20px;align-items:flex-start;opacity:0.6;}
+.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:60px;flex-shrink:0;}
+.next-day-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--amber);line-height:1;}
+.next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;}
+.next-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.next-body{font-size:13px;color:var(--ink-md);line-height:1.75;}
+.next-lock{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;display:flex;align-items:center;gap:6px;}
+
+/* Completion next-action hook */
+.complete-hook{background:var(--green);padding:32px 40px;}
+.ch-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(228,240,232,0.5);letter-spacing:3px;margin-bottom:12px;}
+.ch-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
+.ch-body{font-size:13px;color:rgba(228,240,232,0.7);line-height:1.7;margin-bottom:20px;max-width:440px;}
+.ch-actions{display:flex;gap:12px;flex-wrap:wrap;}
+.ch-btn-primary{background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
+.ch-btn-primary:hover{background:var(--amber-dk);}
+.ch-btn-secondary{background:transparent;color:var(--green-lt);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:1px solid rgba(228,240,232,0.3);cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:all 0.15s;}
+.ch-btn-secondary:hover{border-color:var(--green-lt);}
+
+.chain-section{background:var(--green);padding:40px;text-align:center;}
+.chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
+.chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(228,240,232,0.5);letter-spacing:2px;}
+.chain-dots{display:flex;justify-content:center;gap:8px;margin:20px 0;}
+.chain-dot{width:12px;height:12px;border-radius:50%;background:rgba(228,240,232,0.2);}
+.chain-dot.filled{background:var(--amber);}
+.chain-dot.missed{background:rgba(192,57,43,0.4);}
+.footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);letter-spacing:4px;}
+.footer-logo em{color:var(--amber);font-style:normal;}
+.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.no-data{padding:80px 40px;text-align:center;}
+.no-data-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:16px;}
+.no-data-p{font-size:14px;color:var(--ink-md);margin-bottom:24px;}
+.no-data-btn{display:inline-block;background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 28px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;text-decoration:none;}
+@media(max-width:768px){
+  .nav{padding:0 18px;}.journey-header{padding:36px 18px 32px;}.jh-h{font-size:52px;}
+  .streak-section{padding:24px 18px;flex-direction:column;align-items:flex-start;gap:12px;}.streak-num{font-size:72px;}.streak-fire{display:none;}
+  .progress-section{padding:28px 18px;}.days-grid{gap:4px;}.day-circle{width:36px;height:36px;font-size:14px;}
+  .today-section{padding:28px 18px;}.next-section{padding:28px 18px;}.chain-section{padding:32px 18px;}
+  .complete-hook{padding:28px 18px;}.ch-actions{flex-direction:column;}
+  .footer{padding:20px 18px;flex-direction:column;gap:10px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-logo">AL<em>P</em>INO</div>
+  </div>
+  <div class="nav-streak"><span class="fire">🔥</span><span id="navStreakText">—</span></div>
+</nav>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'alpino_journey_v2';
+
+const dayContent = {
+  1: { action: 'Add 1 spoon of peanut butter to breakfast. Don\'t skip it.', preview: 'You did this. Streak started.', tip: 'Add it to roti, toast, or just eat it off the spoon.' },
+  2: { action: 'Add peanut butter to your mid-morning snack instead of biscuits.', preview: 'Swap the biscuit. Keep the habit.', tip: 'One small swap compounds over 7 days.' },
+  3: { action: 'Have 2 spoons today. Track how full you feel by noon.', preview: 'Double the dose. Notice the difference.', tip: 'Protein keeps you fuller longer. Today you\'ll feel it.' },
+  4: { action: 'Pair peanut butter with a banana for your afternoon snack.', preview: 'Add a fruit. Double the nutrition.', tip: 'Banana + peanut butter = complete snack, no cooking.' },
+  5: { action: 'Replace your evening chai biscuit with peanut butter on toast.', preview: 'Evening habit locked in.', tip: 'If chai happens twice a day, do this at both.' },
+  6: { action: 'Make one full meal protein-focused. Add peanut butter somewhere in it.', preview: 'Full meal upgrade.', tip: 'Dal, eggs, peanut butter — all count as protein.' },
+  7: { action: 'Complete the whole day on plan. You finish the 7-day streak.', preview: 'Final day. You\'ve built a habit.', tip: 'After 7 days, this stops feeling like effort.' }
+};
+
+function getJourneyData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); }
+  catch(e) { return null; }
+}
+
+function saveJourneyData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ─── REAL consecutive streak calculation ───
+// Walk backwards from today's day number, count how many consecutive days are done
+function calcConsecutiveStreak(data) {
+  const todayDay = getTodayDay(data);
+  const completed = data.daysCompleted || [];
+  let streak = 0;
+  // Count from today backwards — only consecutive
+  for (let d = todayDay; d >= 1; d--) {
+    if (completed.includes(d)) {
+      streak++;
+    } else {
+      break; // gap found — streak ends
+    }
+  }
+  return streak;
+}
+
+function getTodayDay(data) {
+  const start = new Date(data.startDate);
+  const now = new Date();
+  const diff = Math.floor((now - start) / (1000*60*60*24));
+  return Math.min(diff + 1, 7);
+}
+
+function isDoneToday(data) {
+  return data.lastCompletedDate === new Date().toDateString();
+}
+
+function hasMissedDays(data) {
+  const todayDay = getTodayDay(data);
+  const completed = data.daysCompleted || [];
+  // Check if any day before today is missing
+  for (let d = 1; d < todayDay; d++) {
+    if (!completed.includes(d)) return true;
+  }
+  return false;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function markTodayDone() {
+  const data = getJourneyData();
+  if (!data) return;
+  const todayDay = getTodayDay(data);
+  const today = new Date().toDateString();
+  if (!data.daysCompleted.includes(todayDay)) {
+    data.daysCompleted.push(todayDay);
+  }
+  data.lastCompletedDate = today;
+  if (!data.completionDates) data.completionDates = {};
+  data.completionDates[todayDay] = today;
+  saveJourneyData(data);
+  renderApp();
+  const streak = calcConsecutiveStreak(data);
+  showToast('🔥 Day ' + todayDay + ' done. Streak: ' + streak + ' day' + (streak !== 1 ? 's' : ''));
+}
+
+function shareProgress() {
+  const data = getJourneyData();
+  const streak = calcConsecutiveStreak(data);
+  const text = 'I\'m on a ' + streak + '-day streak with Alpino! Adding peanut butter to every meal for 7 days. 🥜🔥';
+  if (navigator.share) {
+    navigator.share({ title: 'My Alpino Streak', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Copied to clipboard!'));
+  }
+}
+
+function renderNoData() {
+  return `
+    <div class="no-data">
+      <div class="no-data-h">No journey found.</div>
+      <p class="no-data-p">Start Day 1 first — then your progress will appear here.</p>
+      <a class="no-data-btn" href="alpino_day1_v3.html">← Start Day 1</a>
+    </div>
+    <footer class="footer">
+      <div class="footer-logo">AL<em>P</em>INO</div>
+      <div class="footer-line">© 2025 Alpino Health Foods</div>
+    </footer>
+  `;
+}
+
+function renderApp() {
+  const data = getJourneyData();
+  const app = document.getElementById('app');
+
+  if (!data) {
+    app.innerHTML = renderNoData();
+    return;
+  }
+
+  const streak = calcConsecutiveStreak(data); // ← real consecutive streak
+  const todayDay = getTodayDay(data);
+  const doneToday = isDoneToday(data);
+  const missedDays = hasMissedDays(data);
+  const todayContent = dayContent[todayDay] || dayContent[1];
+  const nextDay = Math.min(todayDay + 1, 7);
+  const nextContent = dayContent[nextDay];
+  const totalDone = (data.daysCompleted || []).length;
+  const pct = Math.round((totalDone / 7) * 100);
+  const allDone = totalDone >= 7;
+
+  // Nav streak
+  document.getElementById('navStreakText').textContent = streak + (streak === 1 ? ' day streak' : ' day streak');
+
+  const streakMessages = ['', 'The chain has begun.', "Don't break it now.", 'Three days in. It\'s becoming real.', 'Halfway. Most people quit here. You didn\'t.', 'Five days. This is a habit now.', 'One more. You\'re almost there.', '7 days done. You built a real habit.'];
+
+  // Build day circles
+  let dayCirclesHTML = '';
+  for (let d = 1; d <= 7; d++) {
+    const isDone = (data.daysCompleted || []).includes(d);
+    const isToday = d === todayDay;
+    const isTodayDone = isToday && doneToday;
+    const isLocked = d > todayDay;
+    const isMissed = d < todayDay && !isDone;
+
+    let cls;
+    if (isTodayDone) { cls = 'today-done'; }
+    else if (isDone && !isToday) { cls = 'done'; }
+    else if (isToday) { cls = 'today-active'; }
+    else if (isMissed) { cls = 'missed'; }
+    else { cls = 'locked'; }
+
+    const labelClass = isToday ? 'active-label' : '';
+    const dayLabel = isToday ? 'TODAY' : ('DAY ' + d);
+    const icon = (isToday && !isTodayDone) ? '▶' : d;
+
+    dayCirclesHTML += `
+      <div class="day-block">
+        <div class="day-circle ${cls}" title="Day ${d}">${icon}</div>
+        <div class="day-label ${labelClass}">${dayLabel}</div>
+      </div>`;
+  }
+
+  // Chain dots
+  let chainDots = '';
+  for (let i = 1; i <= 7; i++) {
+    const done = (data.daysCompleted || []).includes(i);
+    const missed = i < todayDay && !done;
+    chainDots += `<div class="chain-dot ${done ? 'filled' : (missed ? 'missed' : '')}"></div>`;
+  }
+
+  // Today action block
+  const actionHTML = doneToday
+    ? `<div class="already-done-msg">✓ Day ${todayDay} complete. Come back tomorrow for Day ${Math.min(todayDay+1,7)}.</div>`
+    : `
+      <div class="action-box">
+        <div class="action-box-label">// Do this today — Day ${todayDay}</div>
+        <div class="action-box-text">${todayContent.action}</div>
+      </div>
+      <button class="mark-btn" onclick="markTodayDone()">Mark Day ${todayDay} done ✓</button>
+    `;
+
+  // Next action hook — strong CTA after today is done
+  const nextActionSection = doneToday && !allDone ? `
+    <div class="complete-hook">
+      <div class="ch-tag">// Day ${todayDay} complete — what now?</div>
+      <div class="ch-h">TOMORROW:<br>DAY ${nextDay}.</div>
+      <div class="ch-body">${nextContent.preview} ${nextContent.tip} Set a reminder for tomorrow morning so you don't break the chain.</div>
+      <div class="ch-actions">
+        <button class="ch-btn-primary" onclick="setReminder()">⏰ Remind me tomorrow</button>
+        <button class="ch-btn-secondary" onclick="shareProgress()">Share my streak →</button>
+      </div>
+    </div>
+  ` : allDone ? `
+    <div class="complete-hook">
+      <div class="ch-tag">// 7-day challenge complete</div>
+      <div class="ch-h">YOU BUILT<br>A HABIT.</div>
+      <div class="ch-body">7 days of peanut butter. You've rewired one small thing. That's not nothing — that's how lasting change works. Keep going beyond 7.</div>
+      <div class="ch-actions">
+        <button class="ch-btn-primary" onclick="shareProgress()">Share my achievement →</button>
+        <button class="ch-btn-secondary" onclick="window.location.href='alpino_day1_v3.html'">Start a new challenge</button>
+      </div>
+    </div>
+  ` : '';
+
+  // Streak section — show broken streak warning if needed
+  const brokenNote = (missedDays && streak === 0)
+    ? `<div class="streak-broken">⚠ Streak broken — but your progress is saved. Keep going.</div>`
+    : (missedDays && streak > 0)
+    ? `<div class="streak-broken">// Some days missed — current run: ${streak}</div>`
+    : '';
+
+  app.innerHTML = `
+    <div class="journey-header">
+      <div class="jh-bg">JOURNEY</div>
+      <div class="jh-tag">// Your progress</div>
+      <div class="jh-h">YOU'RE<br>ON <em>DAY ${todayDay}.</em></div>
+      <div class="jh-sub">${doneToday ? '✓ TODAY IS DONE · COME BACK TOMORROW' : 'CONSISTENCY STARTS HERE'}</div>
+    </div>
+
+    <div class="streak-section">
+      <div class="streak-main">
+        <div class="streak-num">${streak}</div>
+        <div class="streak-info">
+          <div class="streak-label">// Consecutive streak</div>
+          <div class="streak-title">${streak === 1 ? 'DAY' : 'DAYS'} IN A ROW</div>
+          <div class="streak-msg">${streakMessages[Math.min(streak, 7)]}</div>
+          ${brokenNote}
+        </div>
+      </div>
+      <div class="streak-fire">🔥</div>
+    </div>
+
+    <div class="progress-section">
+      <div class="ps-tag">// 7-day plan progress</div>
+      <div class="ps-h">YOUR WEEK AT A GLANCE</div>
+      <div class="days-grid">${dayCirclesHTML}</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="progress-pct">${totalDone} of 7 days complete · ${pct}%</div>
+    </div>
+
+    <div class="today-section">
+      <div class="ts-tag">// Today's action</div>
+      <div class="ts-card">
+        <div class="ts-status-row">
+          <div class="ts-status-dot ${doneToday ? 'green' : 'amber'}"></div>
+          <div class="ts-status-text">${doneToday ? 'DAY ' + todayDay + ' COMPLETE' : 'DAY ' + todayDay + ' — WAITING FOR YOU'}</div>
+        </div>
+        ${actionHTML}
+      </div>
+    </div>
+
+    ${nextActionSection}
+
+    ${!doneToday && todayDay < 7 ? `
+    <div class="next-section">
+      <div class="next-tag">// Coming up</div>
+      <div class="next-h">TOMORROW: DAY ${nextDay}</div>
+      <div class="next-card">
+        <div class="next-day-badge">
+          <div class="next-day-num">${nextDay}</div>
+          <div class="next-day-label">TOMORROW</div>
+        </div>
+        <div class="next-content">
+          <div class="next-title">${nextContent.preview}</div>
+          <div class="next-body">${nextContent.tip}</div>
+          <div class="next-lock">🔒 Unlocks tomorrow morning</div>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="chain-section">
+      <div class="chain-h">DON'T<br>BREAK<br>THE CHAIN.</div>
+      <div class="chain-sub">// ${totalDone} of 7 days complete</div>
+      <div class="chain-dots">${chainDots}</div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-logo">AL<em>P</em>INO</div>
+      <div class="footer-line">© 2025 Alpino Health Foods · Your journey, day by day</div>
+    </footer>
+  `;
+}
+
+function setReminder() {
+  showToast('💡 Set a phone alarm for tomorrow morning!');
+}
+
+function shareProgress() {
+  const data = getJourneyData();
+  if (!data) return;
+  const streak = calcConsecutiveStreak(data);
+  const text = 'I\'m on a ' + streak + '-day protein streak with Alpino! Adding peanut butter every day for 7 days. 🥜🔥';
+  if (navigator.share) {
+    navigator.share({ title: 'My Alpino Streak', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Copied to clipboard!'));
+  }
+}
+
+renderApp();
+</script>
+</body>
+</html>

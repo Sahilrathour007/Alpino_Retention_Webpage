@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpino · Start Day 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
+  --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
+  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
+  --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
+  --white:#FDFAF5;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
+.nav-logo em{color:var(--amber);font-style:normal;}
+.nav-pill{background:var(--green);color:var(--green-lt);font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 9px;margin-left:10px;font-family:'Space Mono',monospace;}
+.ticker{background:var(--green);padding:9px 0;overflow:hidden;white-space:nowrap;}
+.tick-inner{display:inline-flex;gap:52px;animation:scrolltick 22s linear infinite;}
+.tick-item{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green-lt);letter-spacing:3px;}
+.tick-sep{color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:13px;}
+@keyframes scrolltick{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.hero{display:grid;grid-template-columns:55% 45%;min-height:520px;background:var(--cream);}
+.hero-l{padding:60px 48px 48px;display:flex;flex-direction:column;justify-content:center;}
+.hero-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.hero-tag::before{content:'';display:block;width:20px;height:1px;background:var(--amber);}
+.hero-h{font-family:'Bebas Neue',sans-serif;font-size:82px;line-height:0.9;letter-spacing:1px;color:var(--ink);margin-bottom:20px;}
+.hero-h .a{color:var(--amber);}
+.hero-p{font-size:15px;color:var(--ink-md);line-height:1.78;max-width:380px;margin-bottom:28px;}
+.hero-p strong{color:var(--ink);}
+.hero-form{display:flex;gap:0;margin-bottom:10px;max-width:380px;}
+.hero-email-input{flex:1;background:var(--white);border:1.5px solid var(--cream-border);border-right:none;padding:14px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s;}
+.hero-email-input:focus{border-color:var(--amber);}
+.hero-email-input::placeholder{color:var(--ink-lt);}
+.hero-form-btn{background:var(--amber);color:var(--white);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:14px 20px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;white-space:nowrap;transition:background 0.15s;}
+.hero-form-btn:hover{background:var(--amber-dk);}
+.hero-form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px;}
+.hero-trust{display:flex;gap:8px;flex-wrap:wrap;}
+.trust-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--green-dk);background:var(--green-lt);padding:6px 10px;}
+.trust-chip::before{content:'✓';font-size:9px;}
+.hero-r{background:var(--cream-dk);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px;}
+.hero-bg-text{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:140px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%);}
+.jar{position:relative;display:flex;flex-direction:column;align-items:center;}
+.jar-cap{width:188px;height:26px;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+.jar-cap-text{font-family:'Space Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:4px;}
+.jar-body{width:170px;height:228px;background:var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
+.jar-name{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--white);letter-spacing:5px;line-height:1;}
+.jar-line{width:50px;height:1px;background:rgba(253,250,245,0.3);margin:4px 0;}
+.jar-var{font-family:'Space Mono',monospace;font-size:7px;color:rgba(253,250,245,0.7);letter-spacing:2px;text-align:center;line-height:1.6;}
+.jar-base{width:188px;height:14px;background:var(--amber-dk);}
+.badge-g{position:absolute;top:0;right:-14px;background:var(--green);padding:14px 12px;text-align:center;}
+.badge-g .n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--green-lt);line-height:1;}
+.badge-g .u{font-family:'Space Mono',monospace;font-size:7px;color:rgba(228,240,232,0.7);letter-spacing:1px;margin-top:3px;}
+.badge-day{position:absolute;bottom:18px;left:-8px;background:var(--ink);padding:9px 12px;border-left:3px solid var(--amber);}
+.badge-day .dl{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.5);letter-spacing:1px;}
+.badge-day .dv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);line-height:1;margin-top:2px;letter-spacing:2px;}
+.how{padding:56px 40px;background:var(--cream);}
+.sec-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.sec-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:36px;line-height:1;}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cream-border);}
+.step{background:var(--cream);padding:32px 24px;position:relative;}
+.step:first-child{background:var(--amber);}
+.step-num{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;margin-bottom:14px;}
+.step:first-child .step-num{color:rgba(28,28,26,0.12);}
+.step:not(:first-child) .step-num{color:var(--cream-dk);}
+.step-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.step:first-child .step-label{color:rgba(28,28,26,0.55);}
+.step:not(:first-child) .step-label{color:var(--amber);}
+.step-title{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--ink);}
+.step-body{font-size:13px;line-height:1.75;}
+.step:first-child .step-body{color:rgba(28,28,26,0.6);}
+.step:not(:first-child) .step-body{color:var(--ink-md);}
+.step-arrow{position:absolute;top:32px;right:-1px;width:22px;height:22px;background:var(--amber);display:flex;align-items:center;justify-content:center;z-index:1;}
+.step-arrow svg{width:10px;height:10px;fill:var(--white);}
+.step:last-child .step-arrow{display:none;}
+.proof{background:var(--cream-dk);padding:56px 40px;}
+.proof-inner{display:grid;grid-template-columns:1fr 2fr;gap:48px;align-items:center;}
+.proof-count{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--amber);line-height:1;}
+.proof-count-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:2px;margin-top:6px;}
+.proof-count-sub{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;margin-top:4px;opacity:0.6;}
+.proof-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
+.proof-stars{display:flex;gap:3px;margin-bottom:14px;}
+.star{width:10px;height:10px;background:var(--amber);}
+.proof-text{font-size:14px;color:var(--ink-md);line-height:1.8;font-style:italic;margin-bottom:18px;}
+.proof-author{display:flex;align-items:center;gap:12px;}
+.proof-avatar{width:32px;height:32px;border-radius:50%;background:var(--cream-dk);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-md);}
+.proof-name{font-size:13px;font-weight:700;color:var(--ink);}
+.proof-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px;}
+.footer{background:var(--ink);padding:36px 40px;display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:4px;}
+.footer-logo em{color:var(--amber);font-style:normal;}
+.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1.5px;}
+.footer-links{display:flex;gap:24px;}
+.footer-links span{font-size:12px;color:rgba(253,250,245,0.4);cursor:pointer;}
+.overlay{position:fixed;inset:0;background:rgba(28,28,26,0.82);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.active{display:flex;}
+.modal{background:var(--cream);width:100%;max-width:460px;position:relative;overflow:hidden;}
+.modal-header{background:var(--amber);padding:26px 30px 22px;}
+.modal-header-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.modal-header-h{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--ink);line-height:0.92;letter-spacing:1px;}
+.modal-header-h span{color:var(--white);}
+.modal-body{padding:28px 30px;}
+.modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:rgba(28,28,26,0.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink);}
+.form-step{display:none;}
+.form-step.active{display:block;}
+.field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;display:block;}
+.field-input{width:100%;background:var(--white);border:1.5px solid var(--cream-border);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s;}
+.field-input:focus{border-color:var(--amber);}
+.field-group{margin-bottom:18px;}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.choice-btn{background:var(--white);border:1.5px solid var(--cream-border);padding:13px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--ink-md);transition:all 0.15s;text-align:center;}
+.choice-btn:hover,.choice-btn.selected{border-color:var(--amber);background:var(--amber-lt);color:var(--amber-dk);}
+.form-btn{width:100%;background:var(--ink);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;margin-top:8px;}
+.form-btn:hover{background:#2e2e2a;}
+.form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;text-align:center;}
+.step-dots{display:flex;gap:6px;margin-bottom:20px;}
+.dot{width:22px;height:3px;background:var(--cream-border);}
+.dot.on{background:var(--amber);}
+.confirm-screen{padding:36px 30px;text-align:center;}
+.confirm-icon{width:56px;height:56px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.confirm-icon svg{width:24px;height:24px;stroke:var(--green-lt);}
+.confirm-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:14px;}
+.confirm-h span{color:var(--amber);}
+.confirm-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:20px;max-width:300px;margin-left:auto;margin-right:auto;}
+.day1-action{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;text-align:left;margin-bottom:20px;}
+.day1-action-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
+.day1-action-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.15;}
+.confirm-summary{background:var(--cream-dk);border:1px solid var(--cream-border);padding:14px 18px;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;line-height:2;}
+.confirm-summary strong{color:var(--amber);}
+.streak-bar{display:flex;gap:4px;margin-top:14px;margin-bottom:8px;}
+.streak-day{flex:1;height:7px;background:var(--cream-border);}
+.streak-day.done{background:var(--amber);}
+.streak-day.today{background:var(--green);}
+.streak-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;display:flex;justify-content:space-between;}
+.done-screen{padding:36px 30px;text-align:center;}
+.done-icon{width:56px;height:56px;background:var(--amber);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.done-icon svg{width:24px;height:24px;stroke:var(--white);}
+.done-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:12px;}
+.done-h span{color:var(--amber);}
+.done-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:8px;max-width:300px;margin-left:auto;margin-right:auto;}
+.done-next{font-family:'Space Mono',monospace;font-size:9px;color:var(--green-dk);letter-spacing:1px;background:var(--green-lt);padding:10px 14px;margin:16px 0;}
+.redirect-wrap{margin:12px 0 8px;}
+.redirect-bar-bg{width:100%;height:4px;background:var(--cream-border);overflow:hidden;}
+.redirect-bar{height:100%;background:var(--green);width:0%;transition:none;}
+.redirect-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:6px;margin-bottom:10px;}
+.field-error{border-color:#c0392b!important;}
+.error-msg{font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;margin-top:6px;}
+@media(max-width:768px){
+  .nav{padding:0 18px;}.nav-pill{display:none;}.hero{grid-template-columns:1fr;min-height:auto;}
+  .hero-l{padding:36px 18px 32px;}.hero-h{font-size:64px;}.hero-r{min-height:280px;padding:28px 18px;}
+  .hero-form{max-width:100%;}.how{padding:44px 18px;}.steps-grid{grid-template-columns:1fr;}
+  .step-arrow{display:none!important;}.proof{padding:44px 18px;}.proof-inner{grid-template-columns:1fr;gap:28px;}
+  .footer{padding:24px 18px;flex-direction:column;gap:14px;text-align:center;}
+  .footer-links{flex-wrap:wrap;justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-logo">AL<em>P</em>INO</div>
+    <span class="nav-pill">Day 1 Program</span>
+  </div>
+</nav>
+
+<div class="ticker">
+  <div class="tick-inner">
+    <span class="tick-item">No Gym Required</span><span class="tick-sep">•</span>
+    <span class="tick-item">Real Food. Not Supplements.</span><span class="tick-sep">•</span>
+    <span class="tick-item">Takes Less Than 5 Minutes Daily</span><span class="tick-sep">•</span>
+    <span class="tick-item">Free 7-Day Email Plan</span><span class="tick-sep">•</span>
+    <span class="tick-item">No Gym Required</span><span class="tick-sep">•</span>
+    <span class="tick-item">Real Food. Not Supplements.</span><span class="tick-sep">•</span>
+    <span class="tick-item">Takes Less Than 5 Minutes Daily</span><span class="tick-sep">•</span>
+    <span class="tick-item">Free 7-Day Email Plan</span>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-l">
+    <div class="hero-tag">Your first protein. The right way.</div>
+    <h1 class="hero-h">YOUR<br>FIRST<br><span class="a">PROTEIN.</span><br>MADE<br>SIMPLE.</h1>
+    <p class="hero-p">No confusion. No supplements. <strong>Just real food, one step at a time.</strong> We'll send you a simple daily plan — takes 2 minutes a day. That's it.</p>
+    <div class="hero-form">
+      <input class="hero-email-input" type="email" id="heroEmail" placeholder="yourname@gmail.com" />
+      <button class="hero-form-btn" onclick="openModalWithEmail()">Start Day 1 →</button>
+    </div>
+    <div class="hero-form-note">Free · No credit card · Unsubscribe anytime</div>
+    <div class="hero-trust">
+      <div class="trust-chip">No gym required</div>
+      <div class="trust-chip">No complicated diet</div>
+      <div class="trust-chip">Under 5 min daily</div>
+    </div>
+  </div>
+  <div class="hero-r">
+    <div class="hero-bg-text">PROTEIN</div>
+    <div class="jar">
+      <div class="jar-cap"><span class="jar-cap-text">ALPINO HEALTH FOODS</span></div>
+      <div class="jar-body">
+        <div class="jar-name">ALPINO</div>
+        <div class="jar-line"></div>
+        <div class="jar-var">NATURAL CRUNCHY<br>PEANUT BUTTER</div>
+      </div>
+      <div class="jar-base"></div>
+      <div class="badge-g"><div class="n">30g</div><div class="u">protein/100g</div></div>
+      <div class="badge-day"><div class="dl">Your journey</div><div class="dv">STARTS<br>TODAY</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <p class="sec-tag">// The plan</p>
+  <h2 class="sec-h">Three steps. Zero confusion.</h2>
+  <div class="steps-grid">
+    <div class="step" style="position:relative;">
+      <div class="step-num">01</div><div class="step-label">Right now</div>
+      <div class="step-title">Enter your email</div>
+      <div class="step-body">Answer 2 quick questions. We personalise your plan instantly — by goal and lifestyle, nothing more.</div>
+      <div class="step-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="square"/></svg></div>
+    </div>
+    <div class="step" style="position:relative;">
+      <div class="step-num">02</div><div class="step-label">Inbox, Day 1</div>
+      <div class="step-title">Get your daily plan</div>
+      <div class="step-body">Short, skimmable, actionable. One thing to do each morning. Read it while your chai brews.</div>
+      <div class="step-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="square"/></svg></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div><div class="step-label">By week 2</div>
+      <div class="step-title">Build your habit</div>
+      <div class="step-body">Seven days in, protein is no longer confusing. You've built your first real nutrition habit. From here, everything gets easier.</div>
+    </div>
+  </div>
+</section>
+
+<section class="proof">
+  <div class="proof-inner">
+    <div>
+      <div class="proof-count">★ 4.8</div>
+      <div class="proof-count-label">// Verified reviews</div>
+      <div class="proof-count-sub">From real beginners, verified at purchase</div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-stars"><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div></div>
+      <p class="proof-text">"I thought protein meant powder and gym. The Day 1 email changed everything. I just started adding peanut butter to my roti. That was it. I'm on day 47 now."</p>
+      <div class="proof-author">
+        <div class="proof-avatar">NK</div>
+        <div><div class="proof-name">Neha K.</div><div class="proof-meta">College student · Jaipur · 47 days in</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-logo">AL<em>P</em>INO</div>
+  <div class="footer-line">© 2025 Alpino Health Foods · Surat, Gujarat · Powered by Junagadh Peanuts</div>
+  <div class="footer-links"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
+</footer>
+
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <div class="form-step active" id="step1">
+      <div class="modal-header">
+        <div class="modal-header-tag">// Free 7-day email plan</div>
+        <div class="modal-header-h">START<br><span>DAY 1.</span><br>RIGHT NOW.</div>
+      </div>
+      <div class="modal-body">
+        <div class="step-dots"><div class="dot on"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="field-group">
+          <label class="field-label">Your email address</label>
+          <input class="field-input" type="email" id="emailInput" placeholder="yourname@gmail.com" />
+          <div class="error-msg" id="emailError" style="display:none;">Please enter a valid email address.</div>
+        </div>
+        <button class="form-btn" onclick="goStep2()">Continue →</button>
+        <div class="form-note">No spam. Unsubscribe anytime. 7 emails total.</div>
+      </div>
+    </div>
+
+    <div class="form-step" id="step2">
+      <div class="modal-header">
+        <div class="modal-header-tag">// Almost there</div>
+        <div class="modal-header-h">TWO<br><span>QUICK</span><br>QUESTIONS.</div>
+      </div>
+      <div class="modal-body">
+        <div class="step-dots"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div>
+        <div class="field-group">
+          <label class="field-label">Your main goal</label>
+          <div class="choice-grid">
+            <button class="choice-btn" onclick="selectChoice(this,'goal')">Lose weight</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')">Gain muscle</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')">Stay healthy</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')">Just try it</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Your lifestyle</label>
+          <div class="choice-grid">
+            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')">Student</button>
+            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')">Working</button>
+          </div>
+        </div>
+        <div class="error-msg" id="choiceError" style="display:none;">Please select one option from each group.</div>
+        <button class="form-btn" onclick="goStep3()">Send my Day 1 plan →</button>
+        <div class="form-note">Your plan is personalised to your answers above.</div>
+      </div>
+    </div>
+
+    <div class="form-step" id="step3">
+      <div class="confirm-screen">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg>
+        </div>
+        <h2 class="confirm-h">YOUR<br><span>DAY 1</span><br>ACTION.</h2>
+        <p class="confirm-p">Check your email for the full plan. But here's what to do right now:</p>
+        <div class="day1-action">
+          <div class="day1-action-label" id="day1ActionLabel">// Do this with breakfast today</div>
+          <div class="day1-action-text" id="day1ActionText">ADD 1 SPOON OF PEANUT BUTTER TO YOUR BREAKFAST.</div>
+        </div>
+        <div class="confirm-summary">
+          <div>📧 <strong id="confirmEmail">—</strong></div>
+          <div>🎯 Goal: <strong id="confirmGoal">—</strong></div>
+          <div>🏷 Lifestyle: <strong id="confirmLifestyle">—</strong></div>
+        </div>
+        <div style="margin-bottom:20px;text-align:left;">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:2px;margin-bottom:8px;">// Your 7-day streak starts now</div>
+          <div class="streak-bar">
+            <div class="streak-day today"></div>
+            <div class="streak-day"></div><div class="streak-day"></div><div class="streak-day"></div>
+            <div class="streak-day"></div><div class="streak-day"></div><div class="streak-day"></div>
+          </div>
+          <div class="streak-label"><span>Day 1 (today)</span><span>Day 7</span></div>
+        </div>
+        <button class="form-btn" style="background:var(--green);" onclick="markDone()">I did it — mark Day 1 done ✓</button>
+        <div class="form-note" style="margin-top:10px;">Check spam if you don't see the email within 5 minutes.</div>
+      </div>
+    </div>
+
+    <!-- Step 4: Auto-redirect to journey page -->
+    <div class="form-step" id="step4">
+      <div class="done-screen">
+        <div class="done-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg>
+        </div>
+        <h2 class="done-h">DAY 1<br><span>DONE.</span></h2>
+        <p class="done-p">That's the hardest one. You're no longer someone thinking about starting — you've started.</p>
+        <div class="done-next">🔥 Day 2 unlocks tomorrow. Your streak is live.</div>
+        <div class="redirect-wrap">
+          <div class="redirect-bar-bg"><div class="redirect-bar" id="redirectBar"></div></div>
+          <div class="redirect-note" id="redirectNote">Taking you to your progress in 3…</div>
+        </div>
+        <button class="form-btn" style="background:var(--green);" onclick="goToJourney()">See my progress now →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'alpino_journey_v2';
+let selectedGoal = '';
+let selectedLifestyle = '';
+let capturedEmail = '';
+
+// Goal + Lifestyle aware Day 1 actions
+const day1Actions = {
+  'Lose weight': {
+    'Student':  { label: '// Skip the canteen biscuit today', text: 'SWAP YOUR MORNING BISCUIT FOR 1 SPOON OF PEANUT BUTTER ON TOAST. THAT\'S YOUR ONLY CHANGE TODAY.' },
+    'Working':  { label: '// Desk-friendly breakfast upgrade', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. SKIP THE BISCUIT WITH YOUR CHAI.' }
+  },
+  'Gain muscle': {
+    'Student':  { label: '// Pre-class protein hit', text: 'ADD 2 SPOONS OF PEANUT BUTTER TO YOUR BREAKFAST BEFORE YOU LEAVE. ROTI, TOAST, OR SPOON — JUST EAT IT.' },
+    'Working':  { label: '// Before your commute', text: 'HAVE 2 SPOONS OF PEANUT BUTTER WITH BREAKFAST BEFORE LEAVING HOME. PROTEIN FIRST, EVERYTHING ELSE AFTER.' }
+  },
+  'Stay healthy': {
+    'Student':  { label: '// One swap, whole day impact', text: 'REPLACE ONE SNACK TODAY — ANY SNACK — WITH 1 SPOON OF PEANUT BUTTER ON TOAST OR A BANANA.' },
+    'Working':  { label: '// Lunchbox upgrade', text: 'ADD 1 SPOON OF PEANUT BUTTER SOMEWHERE IN YOUR LUNCH TODAY. ROTI, TOAST, OR MID-MORNING — YOUR CALL.' }
+  },
+  'Just try it': {
+    'Student':  { label: '// Easiest first step', text: 'ADD 1 SPOON OF PEANUT BUTTER TO WHATEVER YOU EAT FOR BREAKFAST. THAT\'S THE WHOLE TASK.' },
+    'Working':  { label: '// Two minutes. That\'s all.', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. EAT IT WITH ROTI, TOAST, OR A BANANA.' }
+  }
+};
+
+function openModalWithEmail() {
+  const val = document.getElementById('heroEmail').value.trim();
+  document.getElementById('overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  showStep(1);
+  if (val) document.getElementById('emailInput').value = val;
+}
+function closeModal() {
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+function showStep(n) {
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+}
+function goStep2() {
+  const emailEl = document.getElementById('emailInput');
+  const errEl = document.getElementById('emailError');
+  const email = emailEl.value.trim();
+  const valid = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!valid) { emailEl.classList.add('field-error'); errEl.style.display = 'block'; return; }
+  emailEl.classList.remove('field-error');
+  errEl.style.display = 'none';
+  capturedEmail = email;
+  showStep(2);
+}
+function goStep3() {
+  const errEl = document.getElementById('choiceError');
+  if (!selectedGoal || !selectedLifestyle) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  document.getElementById('confirmEmail').textContent = capturedEmail;
+  document.getElementById('confirmGoal').textContent = selectedGoal;
+  document.getElementById('confirmLifestyle').textContent = selectedLifestyle;
+  const actions = (day1Actions[selectedGoal] || day1Actions['Just try it']);
+  const action = actions[selectedLifestyle] || actions['Student'];
+  document.getElementById('day1ActionLabel').textContent = action.label;
+  document.getElementById('day1ActionText').textContent = action.text;
+  showStep(3);
+}
+function markDone() {
+  const today = new Date().toDateString();
+  const journeyData = {
+    email: capturedEmail,
+    goal: selectedGoal,
+    lifestyle: selectedLifestyle,
+    startDate: new Date().toISOString(),
+    daysCompleted: [1],
+    lastCompletedDate: today,
+    completionDates: { '1': today }
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(journeyData));
+  showStep(4);
+  startRedirectCountdown();
+}
+function startRedirectCountdown() {
+  const bar = document.getElementById('redirectBar');
+  const note = document.getElementById('redirectNote');
+  let count = 3;
+  // Kick off CSS transition for bar
+  requestAnimationFrame(() => {
+    bar.style.transition = 'width 3s linear';
+    bar.style.width = '100%';
+  });
+  const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      note.textContent = 'Taking you to your progress in ' + count + '…';
+    } else {
+      clearInterval(timer);
+      note.textContent = 'Loading your journey…';
+      goToJourney();
+    }
+  }, 1000);
+}
+function goToJourney() {
+  window.location.href = 'alpino_journey.html';
+}
+function selectChoice(btn, group) {
+  btn.closest('.choice-grid').querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (group === 'goal') selectedGoal = btn.textContent;
+  if (group === 'lifestyle') selectedLifestyle = btn.textContent;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

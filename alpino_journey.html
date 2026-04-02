@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alpino · Your Journey</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -133,63 +134,96 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = 'alpino_journey_v2';
+// ═══════════════════════════════════════════════
+// ALPINO JOURNEY — FINAL CLEAN VERSION
+//
+// DESIGN DECISIONS (explicit):
+//   progress = current_day  → never resets. Duolingo style.
+//   streak   = consecutive calendar days ending today
+//              → resets to 0 if user skips a day
+//              → these are TWO SEPARATE concepts in the UI
+//
+// SCHEMA (Supabase):
+//   users   → email, goal, lifestyle, current_day, last_completed_date,
+//             streak_count    int     default 0    — increments on day_complete, resets to 1 on broken streak
+//             signup_tracked  boolean default false — set true after first signup event fires (prevents dupes)
+//   events  → email, event, metadata (jsonb), created_at
+//             Events tracked: signup (once), journey_view, day_complete
+//
+// TRIGGER SYSTEM: NOT in this file.
+//   Real retention = server-side cron (Supabase Edge Function)
+//   → reads users where last_completed_date < yesterday
+//   → sends WhatsApp/email via Gupshup or Resend
+//   That is a backend job. This file does not pretend otherwise.
+// ═══════════════════════════════════════════════
 
+const _supabase = window.supabase.createClient(
+  'https://shkbxpsxieyuvonfbntf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
+);
+
+// ─── IDENTITY ───
+const _urlParams = new URLSearchParams(window.location.search);
+const _emailParam = _urlParams.get('email') || localStorage.getItem('alpino_user_email') || '';
+
+let _user = null;
+
+// ─── DAY CONTENT ───
 const dayContent = {
-  1: { action: 'Add 1 spoon of peanut butter to breakfast. Don\'t skip it.', preview: 'You did this. Streak started.', tip: 'Add it to roti, toast, or just eat it off the spoon.' },
-  2: { action: 'Add peanut butter to your mid-morning snack instead of biscuits.', preview: 'Swap the biscuit. Keep the habit.', tip: 'One small swap compounds over 7 days.' },
-  3: { action: 'Have 2 spoons today. Track how full you feel by noon.', preview: 'Double the dose. Notice the difference.', tip: 'Protein keeps you fuller longer. Today you\'ll feel it.' },
-  4: { action: 'Pair peanut butter with a banana for your afternoon snack.', preview: 'Add a fruit. Double the nutrition.', tip: 'Banana + peanut butter = complete snack, no cooking.' },
-  5: { action: 'Replace your evening chai biscuit with peanut butter on toast.', preview: 'Evening habit locked in.', tip: 'If chai happens twice a day, do this at both.' },
-  6: { action: 'Make one full meal protein-focused. Add peanut butter somewhere in it.', preview: 'Full meal upgrade.', tip: 'Dal, eggs, peanut butter — all count as protein.' },
-  7: { action: 'Complete the whole day on plan. You finish the 7-day streak.', preview: 'Final day. You\'ve built a habit.', tip: 'After 7 days, this stops feeling like effort.' }
+  1: { action: 'Add 1 spoon of peanut butter to breakfast. Don\'t skip it.', tip: 'Add it to roti, toast, or just eat it off the spoon.' },
+  2: { action: 'Add peanut butter to your mid-morning snack instead of biscuits.', tip: 'One small swap compounds over 7 days.' },
+  3: { action: 'Have 2 spoons today. Track how full you feel by noon.', tip: 'Protein keeps you fuller longer. Today you\'ll feel it.' },
+  4: { action: 'Pair peanut butter with a banana for your afternoon snack.', tip: 'Banana + peanut butter = complete snack, no cooking.' },
+  5: { action: 'Replace your evening chai biscuit with peanut butter on toast.', tip: 'If chai happens twice a day, do this at both.' },
+  6: { action: 'Make one full meal protein-focused. Add peanut butter somewhere in it.', tip: 'Dal, eggs, peanut butter — all count as protein.' },
+  7: { action: 'Complete the whole day on plan. You finish the 7-day challenge.', tip: 'After 7 days, this stops feeling like effort.' }
 };
 
-function getJourneyData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); }
-  catch(e) { return null; }
-}
-
-function saveJourneyData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-// ─── REAL consecutive streak calculation ───
-// Walk backwards from today's day number, count how many consecutive days are done
-function calcConsecutiveStreak(data) {
-  const todayDay = getTodayDay(data);
-  const completed = data.daysCompleted || [];
-  let streak = 0;
-  // Count from today backwards — only consecutive
-  for (let d = todayDay; d >= 1; d--) {
-    if (completed.includes(d)) {
-      streak++;
-    } else {
-      break; // gap found — streak ends
-    }
-  }
-  return streak;
-}
-
-function getTodayDay(data) {
-  const start = new Date(data.startDate);
+// ─── STREAK LOGIC ───
+// progress (current_day) and streak are SEPARATE.
+// progress never resets. streak resets if user skips a calendar day.
+// streak_count is stored in DB and incremented on each day_complete.
+// If last_completed_date is 2+ days ago, streak is dead regardless of streak_count.
+function calcStreak(user) {
+  if (!user.last_completed_date) return 0;
+  const last = new Date(user.last_completed_date);
   const now = new Date();
-  const diff = Math.floor((now - start) / (1000*60*60*24));
-  return Math.min(diff + 1, 7);
+  const lastCal = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+  const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const diffDays = Math.round((todayCal - lastCal) / 86400000);
+
+  // diffDays 0 = completed today, 1 = completed yesterday (streak alive), 2+ = broken
+  if (diffDays <= 1) return user.streak_count || 1; // ← use stored streak_count, not current_day
+  return 0; // streak broken — progress preserved separately
 }
 
-function isDoneToday(data) {
-  return data.lastCompletedDate === new Date().toDateString();
+function canMarkToday(user) {
+  if (!user.last_completed_date) return true;
+  const last = new Date(user.last_completed_date);
+  const now = new Date();
+  const lastCal = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+  const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return todayCal > lastCal; // must be a different calendar day
 }
 
-function hasMissedDays(data) {
-  const todayDay = getTodayDay(data);
-  const completed = data.daysCompleted || [];
-  // Check if any day before today is missing
-  for (let d = 1; d < todayDay; d++) {
-    if (!completed.includes(d)) return true;
-  }
-  return false;
+function isDoneToday(user) {
+  if (!user.last_completed_date) return false;
+  return new Date(user.last_completed_date).toDateString() === new Date().toDateString();
+}
+
+// ─── EVENT TRACKING ───
+// Writes to `events` table: email, event, metadata, created_at
+// Enables: signup rate, D1 completion, D2 retention, streak_broken rate
+// All queryable directly in Supabase dashboard — no third party needed
+async function trackEvent(eventName, metadata = {}) {
+  if (!_emailParam) return;
+  const { error } = await _supabase.from('events').insert([{
+    email: _emailParam,
+    event: eventName,
+    metadata,
+    created_at: new Date().toISOString()
+  }]);
+  if (error) console.error('Event track error:', error);
 }
 
 function showToast(msg) {
@@ -199,127 +233,184 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function markTodayDone() {
-  const data = getJourneyData();
-  if (!data) return;
-  const todayDay = getTodayDay(data);
-  const today = new Date().toDateString();
-  if (!data.daysCompleted.includes(todayDay)) {
-    data.daysCompleted.push(todayDay);
+// ─── MARK TODAY DONE ───
+async function markTodayDone() {
+  if (!_user) return;
+  if (isDoneToday(_user)) { showToast('✓ Already done today. Come back tomorrow.'); return; }
+  if (!canMarkToday(_user)) { showToast('⏳ Come back tomorrow to mark the next day.'); return; }
+
+  // Fetch fresh from DB — prevent double-advance from stale local state
+  // streak_count included: _user may be stale if tab was open across midnight
+  const { data: fresh, error: fetchErr } = await _supabase
+    .from('users').select('current_day, last_completed_date, streak_count').eq('email', _user.email).single();
+  if (fetchErr) { console.error('Fetch error:', fetchErr); return; }
+
+  const dbDoneToday = fresh?.last_completed_date
+    ? new Date(fresh.last_completed_date).toDateString() === new Date().toDateString()
+    : false;
+  if (dbDoneToday) {
+    showToast('✓ Already done today. Come back tomorrow.');
+    _user = { ..._user, ...fresh };
+    renderApp(); return;
   }
-  data.lastCompletedDate = today;
-  if (!data.completionDates) data.completionDates = {};
-  data.completionDates[todayDay] = today;
-  saveJourneyData(data);
+
+  const completedDay = fresh?.current_day || _user.current_day || 1;
+  const streakWasBroken = calcStreak(_user) === 0 && completedDay > 1;
+  // Use fresh.streak_count — _user.streak_count could be stale if tab was open overnight
+  const currentStreakCount = fresh?.streak_count ?? _user.streak_count ?? 0;
+  const newStreakCount = streakWasBroken ? 1 : currentStreakCount + 1;
+  const nextDay = Math.min(completedDay + 1, 7);
+  const nowISO = new Date().toISOString();
+
+  const { error } = await _supabase
+    .from('users').update({ current_day: nextDay, last_completed_date: nowISO, streak_count: newStreakCount }).eq('email', _user.email);
+  if (error) { console.error('Update error:', error); return; }
+
+  _user.current_day = nextDay;
+  _user.last_completed_date = nowISO;
+  _user.streak_count = newStreakCount;
+
+  // Track event for analytics
+  await trackEvent('day_complete', {
+    day: completedDay,
+    streak_was_broken: streakWasBroken,
+    goal: _user.goal,
+    lifestyle: _user.lifestyle
+  });
+
   renderApp();
-  const streak = calcConsecutiveStreak(data);
-  showToast('🔥 Day ' + todayDay + ' done. Streak: ' + streak + ' day' + (streak !== 1 ? 's' : ''));
+  showToast(streakWasBroken
+    ? '✓ Day ' + completedDay + ' done. Chain restarted. Don\'t stop now.'
+    : '🔥 Day ' + completedDay + ' done. Don\'t break the chain.'
+  );
 }
 
-function shareProgress() {
-  const data = getJourneyData();
-  const streak = calcConsecutiveStreak(data);
-  const text = 'I\'m on a ' + streak + '-day streak with Alpino! Adding peanut butter to every meal for 7 days. 🥜🔥';
-  if (navigator.share) {
-    navigator.share({ title: 'My Alpino Streak', text });
-  } else {
-    navigator.clipboard.writeText(text).then(() => showToast('✓ Copied to clipboard!'));
+// ─── LOAD ───
+async function loadUserFromSupabase() {
+  if (!_emailParam) { renderApp(); return; }
+
+  const { data, error } = await _supabase
+    .from('users').select('*').eq('email', _emailParam).single();
+  if (error || !data) { console.error('Load error:', error); renderApp(); return; }
+
+  _user = data;
+
+  // Track signup exactly once using signup_tracked boolean column.
+  // Previous approach (!last_completed_date) was unreliable — users returning after
+  // abandoning Day 1 would re-trigger the event, polluting funnel data.
+  if (!data.signup_tracked) {
+    await trackEvent('signup', {
+      goal: data.goal,
+      lifestyle: data.lifestyle
+    });
+    // Mark as tracked so this never fires again, even across sessions
+    await _supabase.from('users').update({ signup_tracked: true }).eq('email', _user.email);
+    _user.signup_tracked = true;
   }
+
+  // Track page_view — measures return visits, funnel drop-off
+  await trackEvent('journey_view', {
+    current_day: data.current_day,
+    done_today: isDoneToday(data),
+    streak: calcStreak(data)
+  });
+
+  renderApp();
 }
 
-function renderNoData() {
-  return `
-    <div class="no-data">
-      <div class="no-data-h">No journey found.</div>
-      <p class="no-data-p">Start Day 1 first — then your progress will appear here.</p>
-      <a class="no-data-btn" href="alpino_day1_v3.html">← Start Day 1</a>
-    </div>
-    <footer class="footer">
-      <div class="footer-logo">AL<em>P</em>INO</div>
-      <div class="footer-line">© 2025 Alpino Health Foods</div>
-    </footer>
-  `;
-}
-
+// ─── RENDER ───
 function renderApp() {
-  const data = getJourneyData();
   const app = document.getElementById('app');
 
-  if (!data) {
-    app.innerHTML = renderNoData();
+  if (!_user) {
+    app.innerHTML = `
+      <div class="no-data">
+        <div class="no-data-h">No journey found.</div>
+        <p class="no-data-p">Start Day 1 first — your progress will appear here.</p>
+        <a class="no-data-btn" href="index.html">← Start Day 1</a>
+      </div>
+      <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
+    `;
     return;
   }
 
-  const streak = calcConsecutiveStreak(data); // ← real consecutive streak
-  const todayDay = getTodayDay(data);
-  const doneToday = isDoneToday(data);
-  const missedDays = hasMissedDays(data);
-  const todayContent = dayContent[todayDay] || dayContent[1];
-  const nextDay = Math.min(todayDay + 1, 7);
-  const nextContent = dayContent[nextDay];
-  const totalDone = (data.daysCompleted || []).length;
-  const pct = Math.round((totalDone / 7) * 100);
-  const allDone = totalDone >= 7;
+  // ── Two explicitly separate concepts ──
+  const progress = _user.current_day || 1;   // never resets — how far they've come
+  const streak = calcStreak(_user);           // resets on skip — today's momentum
+  const doneToday = isDoneToday(_user);
+  const streakBroken = !doneToday && streak === 0 && progress > 1;
+  const nextDay = Math.min(progress + 1, 7);
+  const pct = Math.round((progress / 7) * 100);
+  const allDone = progress >= 7 && doneToday;
+  const todayContent = dayContent[progress] || dayContent[7];
+  const nextContent = dayContent[nextDay] || dayContent[7];
 
-  // Nav streak
-  document.getElementById('navStreakText').textContent = streak + (streak === 1 ? ' day streak' : ' day streak');
+  document.getElementById('navStreakText').textContent =
+    streak > 0 ? streak + '-day streak 🔥' : 'Streak broken';
 
-  const streakMessages = ['', 'The chain has begun.', "Don't break it now.", 'Three days in. It\'s becoming real.', 'Halfway. Most people quit here. You didn\'t.', 'Five days. This is a habit now.', 'One more. You\'re almost there.', '7 days done. You built a real habit.'];
+  const streakMessages = {
+    0: streakBroken ? 'You\'ve been here before. Pick it back up today.' : 'Start here.',
+    1: 'Day 1 done. The chain has begun.',
+    2: "Two days in. Don't break it now.",
+    3: 'Three days. It\'s becoming real.',
+    4: 'Halfway. Most people quit here. You didn\'t.',
+    5: 'Five days. This is a habit now.',
+    6: 'One more. You\'re almost there.',
+    7: '7 days done. You built a real habit.'
+  };
 
-  // Build day circles
+  // Day circles — progress drives unlocked state, doneToday drives today circle
   let dayCirclesHTML = '';
   for (let d = 1; d <= 7; d++) {
-    const isDone = (data.daysCompleted || []).includes(d);
-    const isToday = d === todayDay;
-    const isTodayDone = isToday && doneToday;
-    const isLocked = d > todayDay;
-    const isMissed = d < todayDay && !isDone;
-
-    let cls;
-    if (isTodayDone) { cls = 'today-done'; }
-    else if (isDone && !isToday) { cls = 'done'; }
-    else if (isToday) { cls = 'today-active'; }
-    else if (isMissed) { cls = 'missed'; }
-    else { cls = 'locked'; }
-
-    const labelClass = isToday ? 'active-label' : '';
-    const dayLabel = isToday ? 'TODAY' : ('DAY ' + d);
-    const icon = (isToday && !isTodayDone) ? '▶' : d;
-
+    const done = d < progress || (d === progress && doneToday);
+    const isToday = d === progress;
+    const locked = d > progress;
+    const cls = done && isToday ? 'today-done' : done ? 'done' : isToday ? 'today-active' : 'locked';
     dayCirclesHTML += `
       <div class="day-block">
-        <div class="day-circle ${cls}" title="Day ${d}">${icon}</div>
-        <div class="day-label ${labelClass}">${dayLabel}</div>
+        <div class="day-circle ${cls}">${isToday && !doneToday ? '▶' : d}</div>
+        <div class="day-label ${isToday ? 'active-label' : ''}">${isToday ? 'TODAY' : 'DAY ' + d}</div>
       </div>`;
   }
 
   // Chain dots
   let chainDots = '';
   for (let i = 1; i <= 7; i++) {
-    const done = (data.daysCompleted || []).includes(i);
-    const missed = i < todayDay && !done;
-    chainDots += `<div class="chain-dot ${done ? 'filled' : (missed ? 'missed' : '')}"></div>`;
+    const done = i < progress || (i === progress && doneToday);
+    chainDots += `<div class="chain-dot ${done ? 'filled' : ''}"></div>`;
   }
 
-  // Today action block
+  // Re-engagement hook: when streak is broken, show what they've earned — not shame, stakes
+  // "You got to Day X. That's real. One action today keeps it alive."
+  const reEngageHTML = streakBroken ? `
+    <div style="background:var(--ink);border-left:4px solid #c0392b;padding:18px 20px;margin-bottom:16px;">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;color:#c0392b;letter-spacing:2px;margin-bottom:8px;">// You stopped at Day ${progress}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);line-height:1.2;letter-spacing:1px;">YOU'VE COME ${progress - 1} DAY${progress > 2 ? 'S' : ''}.<br>ONE ACTION TODAY KEEPS IT.</div>
+      <div style="font-size:12px;color:rgba(253,250,245,0.5);margin-top:10px;line-height:1.7;">Your progress is saved. Your streak broke — but your habit didn't have to. Do today's action and the chain restarts.</div>
+    </div>
+  ` : '';
+
+  // Action block
   const actionHTML = doneToday
-    ? `<div class="already-done-msg">✓ Day ${todayDay} complete. Come back tomorrow for Day ${Math.min(todayDay+1,7)}.</div>`
+    ? `<div class="already-done-msg">✓ Day ${progress} done. Come back tomorrow — don't break the chain.</div>`
     : `
-      <div class="action-box">
-        <div class="action-box-label">// Do this today — Day ${todayDay}</div>
+      ${reEngageHTML}
+      <div class="action-box" style="${streakBroken ? 'border-color:#c0392b;' : ''}">
+        <div class="action-box-label" style="${streakBroken ? 'color:#c0392b;' : ''}">// Day ${progress} — do this today</div>
         <div class="action-box-text">${todayContent.action}</div>
       </div>
-      <button class="mark-btn" onclick="markTodayDone()">Mark Day ${todayDay} done ✓</button>
+      <button class="mark-btn" style="${streakBroken ? 'background:#c0392b;' : ''}" onclick="markTodayDone()">
+        ${streakBroken ? 'Restart the chain — Day ' + progress + ' done ✓' : 'Mark Day ' + progress + ' done ✓'}
+      </button>
     `;
 
-  // Next action hook — strong CTA after today is done
   const nextActionSection = doneToday && !allDone ? `
     <div class="complete-hook">
-      <div class="ch-tag">// Day ${todayDay} complete — what now?</div>
-      <div class="ch-h">TOMORROW:<br>DAY ${nextDay}.</div>
-      <div class="ch-body">${nextContent.preview} ${nextContent.tip} Set a reminder for tomorrow morning so you don't break the chain.</div>
+      <div class="ch-tag">// Day ${progress} complete</div>
+      <div class="ch-h">COME BACK<br>TOMORROW.</div>
+      <div class="ch-body">Day ${nextDay} unlocks tomorrow. ${nextContent.tip}</div>
       <div class="ch-actions">
-        <button class="ch-btn-primary" onclick="setReminder()">⏰ Remind me tomorrow</button>
+        <button class="ch-btn-primary" onclick="setReminder()">⏰ Set tomorrow's reminder</button>
         <button class="ch-btn-secondary" onclick="shareProgress()">Share my streak →</button>
       </div>
     </div>
@@ -327,58 +418,53 @@ function renderApp() {
     <div class="complete-hook">
       <div class="ch-tag">// 7-day challenge complete</div>
       <div class="ch-h">YOU BUILT<br>A HABIT.</div>
-      <div class="ch-body">7 days of peanut butter. You've rewired one small thing. That's not nothing — that's how lasting change works. Keep going beyond 7.</div>
+      <div class="ch-body">7 days of peanut butter. You've rewired one small behaviour. That's how lasting change works.</div>
       <div class="ch-actions">
         <button class="ch-btn-primary" onclick="shareProgress()">Share my achievement →</button>
-        <button class="ch-btn-secondary" onclick="window.location.href='alpino_day1_v3.html'">Start a new challenge</button>
       </div>
     </div>
   ` : '';
-
-  // Streak section — show broken streak warning if needed
-  const brokenNote = (missedDays && streak === 0)
-    ? `<div class="streak-broken">⚠ Streak broken — but your progress is saved. Keep going.</div>`
-    : (missedDays && streak > 0)
-    ? `<div class="streak-broken">// Some days missed — current run: ${streak}</div>`
-    : '';
 
   app.innerHTML = `
     <div class="journey-header">
       <div class="jh-bg">JOURNEY</div>
       <div class="jh-tag">// Your progress</div>
-      <div class="jh-h">YOU'RE<br>ON <em>DAY ${todayDay}.</em></div>
-      <div class="jh-sub">${doneToday ? '✓ TODAY IS DONE · COME BACK TOMORROW' : 'CONSISTENCY STARTS HERE'}</div>
+      <div class="jh-h">YOU'RE ON<br><em>DAY ${progress}.</em></div>
+      <div class="jh-sub">${doneToday ? '✓ TODAY DONE · COME BACK TOMORROW' : streakBroken ? '⚠ STREAK BROKEN — PROGRESS SAVED' : 'CONSISTENCY STARTS HERE'}</div>
     </div>
 
-    <div class="streak-section">
-      <div class="streak-main">
-        <div class="streak-num">${streak}</div>
-        <div class="streak-info">
-          <div class="streak-label">// Consecutive streak</div>
-          <div class="streak-title">${streak === 1 ? 'DAY' : 'DAYS'} IN A ROW</div>
-          <div class="streak-msg">${streakMessages[Math.min(streak, 7)]}</div>
-          ${brokenNote}
-        </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);">
+
+      <div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;${streakBroken ? 'background:var(--ink);' : ''}">
+        <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:${streakBroken ? 'rgba(253,250,245,0.3)' : 'rgba(28,28,26,0.4)'};margin-bottom:4px;">// STREAK</div>
+        <div class="streak-num" style="${streakBroken ? 'color:#c0392b;font-size:72px;' : ''}">${streak}</div>
+        <div class="streak-title" style="font-size:14px;${streakBroken ? 'color:var(--amber);' : ''}">${streak === 0 ? 'BROKEN' : streak === 1 ? 'DAY IN A ROW' : 'DAYS IN A ROW'}</div>
+        <div style="font-size:11px;${streakBroken ? 'color:rgba(253,250,245,0.4);' : 'color:var(--ink-md);'};margin-top:4px;">${streakMessages[Math.min(streak, 7)]}</div>
       </div>
-      <div class="streak-fire">🔥</div>
+
+      <div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;">
+        <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.4);margin-bottom:4px;">// PROGRESS</div>
+        <div class="streak-num">${progress}</div>
+        <div class="streak-title" style="font-size:14px;">${progress === 7 ? 'DAYS DONE' : 'OF 7 DAYS'}</div>
+        <div style="font-size:11px;color:var(--ink-md);margin-top:4px;">${progress === 7 ? 'Challenge complete.' : (7 - progress) + ' day' + (7 - progress !== 1 ? 's' : '') + ' to go.'}</div>
+      </div>
+
     </div>
 
     <div class="progress-section">
-      <div class="ps-tag">// 7-day plan progress</div>
-      <div class="ps-h">YOUR WEEK AT A GLANCE</div>
+      <div class="ps-tag">// 7-day challenge</div>
+      <div class="ps-h">YOUR WEEK</div>
       <div class="days-grid">${dayCirclesHTML}</div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" style="width:${pct}%"></div>
-      </div>
-      <div class="progress-pct">${totalDone} of 7 days complete · ${pct}%</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="progress-pct">${progress} of 7 days · ${pct}%</div>
     </div>
 
     <div class="today-section">
       <div class="ts-tag">// Today's action</div>
       <div class="ts-card">
         <div class="ts-status-row">
-          <div class="ts-status-dot ${doneToday ? 'green' : 'amber'}"></div>
-          <div class="ts-status-text">${doneToday ? 'DAY ' + todayDay + ' COMPLETE' : 'DAY ' + todayDay + ' — WAITING FOR YOU'}</div>
+          <div class="ts-status-dot ${doneToday ? 'green' : streakBroken ? 'red' : 'amber'}"></div>
+          <div class="ts-status-text">${doneToday ? 'DAY ' + progress + ' COMPLETE' : 'DAY ' + progress + ' — WAITING FOR YOU'}</div>
         </div>
         ${actionHTML}
       </div>
@@ -386,26 +472,9 @@ function renderApp() {
 
     ${nextActionSection}
 
-    ${!doneToday && todayDay < 7 ? `
-    <div class="next-section">
-      <div class="next-tag">// Coming up</div>
-      <div class="next-h">TOMORROW: DAY ${nextDay}</div>
-      <div class="next-card">
-        <div class="next-day-badge">
-          <div class="next-day-num">${nextDay}</div>
-          <div class="next-day-label">TOMORROW</div>
-        </div>
-        <div class="next-content">
-          <div class="next-title">${nextContent.preview}</div>
-          <div class="next-body">${nextContent.tip}</div>
-          <div class="next-lock">🔒 Unlocks tomorrow morning</div>
-        </div>
-      </div>
-    </div>` : ''}
-
     <div class="chain-section">
       <div class="chain-h">DON'T<br>BREAK<br>THE CHAIN.</div>
-      <div class="chain-sub">// ${totalDone} of 7 days complete</div>
+      <div class="chain-sub">// ${progress} of 7 days complete</div>
       <div class="chain-dots">${chainDots}</div>
     </div>
 
@@ -417,22 +486,20 @@ function renderApp() {
 }
 
 function setReminder() {
-  showToast('💡 Set a phone alarm for tomorrow morning!');
+  showToast('💡 Set a phone alarm for 8am tomorrow — don\'t break the chain.');
 }
 
 function shareProgress() {
-  const data = getJourneyData();
-  if (!data) return;
-  const streak = calcConsecutiveStreak(data);
-  const text = 'I\'m on a ' + streak + '-day protein streak with Alpino! Adding peanut butter every day for 7 days. 🥜🔥';
-  if (navigator.share) {
-    navigator.share({ title: 'My Alpino Streak', text });
-  } else {
-    navigator.clipboard.writeText(text).then(() => showToast('✓ Copied to clipboard!'));
-  }
+  if (!_user) return;
+  const streak = calcStreak(_user);
+  const text = streak > 0
+    ? 'Day ' + _user.current_day + ' done. ' + streak + '-day streak with Alpino. 🥜🔥'
+    : 'Back on track with Alpino. Day ' + _user.current_day + '. 🥜';
+  if (navigator.share) { navigator.share({ title: 'My Alpino Journey', text }); }
+  else { navigator.clipboard.writeText(text).then(() => showToast('✓ Copied!')); }
 }
 
-renderApp();
+loadUserFromSupabase();
 </script>
 </body>
 </html>

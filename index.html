@@ -519,6 +519,15 @@ async function markDone(){
       if (insertError) throw insertError;
     }
 
+    // ── SEND DAY 1 EMAIL ──────────────────────────────────────
+    // Fire-and-forget: don't block the UI if email fails
+    fetch('/.netlify/functions/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, goal: selectedGoal, lifestyle: selectedLifestyle })
+    }).catch(err => console.warn('Email send error (non-blocking):', err));
+    // ─────────────────────────────────────────────────────────
+
     showStep(4);
     startRedirectCountdown();
   } catch (err) {

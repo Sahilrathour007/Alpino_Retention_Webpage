@@ -143,30 +143,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 //              → resets to 0 if user skips a day
 //              → these are TWO SEPARATE concepts in the UI
 //
-// SCHEMA (Supabase — must exist before this file works):
-//   TABLE: users
-//     email               TEXT PRIMARY KEY
-//     goal                TEXT
-//     lifestyle           TEXT
-//     current_day         INT       default 1
-//     last_completed_date TEXT      (ISO string)
-//     streak_count        INT       default 0    — source of truth for streak display
-//     signup_tracked      BOOLEAN   default false — set true after signup event fires
-//
-//   TABLE: events
-//     id                  BIGINT    generated always as identity (primary key)
-//     email               TEXT
-//     event               TEXT      ('signup' | 'journey_view' | 'day_complete')
-//     metadata            JSONB
-//     created_at          TEXT      (ISO string)
-//
-//   SQL to add missing columns (run once in Supabase SQL editor):
-//     alter table users add column if not exists streak_count int default 0;
-//     alter table users add column if not exists signup_tracked boolean default false;
-//     create table if not exists events (
-//       id bigint generated always as identity primary key,
-//       email text, event text, metadata jsonb, created_at text
-//     );
+// SCHEMA (Supabase):
+//   users   → email, goal, lifestyle, current_day, last_completed_date, streak_count
+//             streak_count: int, default 0. Incremented on each day_complete.
+//             Resets to 1 on streak broken. Source of truth for streak display.
+//   events  → email, event, metadata (jsonb), created_at
+//             Events tracked: signup, journey_view, day_complete
 //
 // TRIGGER SYSTEM: NOT in this file.
 //   Real retention = server-side cron (Supabase Edge Function)
@@ -181,21 +163,8 @@ const _supabase = window.supabase.createClient(
 );
 
 // ─── IDENTITY ───
-// Priority order:
-//   1. localStorage (set by index.html at signup — always correct)
-//   2. URL ?email= param (fallback for direct links, but NOT allowed to override a live session)
-// Reason: URL param can be wrong (manually typed, old link, wrong browser).
-// localStorage was written by the app itself at the moment of signup — trust it more.
 const _urlParams = new URLSearchParams(window.location.search);
-const _localEmail = localStorage.getItem('alpino_user_email') || '';
-const _urlEmail   = _urlParams.get('email') || '';
-// Use localStorage if it exists; fall back to URL param only if localStorage is empty
-const _emailParam = _localEmail || _urlEmail;
-
-// Dev debug — visible in browser console, not in UI
-if (_urlEmail && _localEmail && _urlEmail !== _localEmail) {
-  console.warn('[Alpino] URL email (' + _urlEmail + ') differs from localStorage (' + _localEmail + '). Using localStorage.');
-}
+const _emailParam = _urlParams.get('email') || localStorage.getItem('alpino_user_email') || '';
 
 let _user = null;
 
@@ -257,24 +226,6 @@ async function trackEvent(eventName, metadata = {}) {
   if (error) console.error('Event track error:', error);
 }
 
-// ─── NO DATA STATE ───
-// Called when DB lookup fails — shows which email was tried so user can self-diagnose
-function renderNoData(attemptedEmail) {
-  const app = document.getElementById('app');
-  const emailDisplay = attemptedEmail
-    ? `<div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px;">Looked up: <strong style="color:var(--amber);">${attemptedEmail}</strong></div>`
-    : '';
-  app.innerHTML = `
-    <div class="no-data">
-      <div class="no-data-h">No journey found.</div>
-      ${emailDisplay}
-      <p class="no-data-p">This email hasn't started Day 1 yet — or you may have signed up with a different address. Check your inbox for the Alpino welcome email to find the right one.</p>
-      <a class="no-data-btn" href="index.html">← Start Day 1</a>
-    </div>
-    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
-  `;
-}
-
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -289,9 +240,8 @@ async function markTodayDone() {
   if (!canMarkToday(_user)) { showToast('⏳ Come back tomorrow to mark the next day.'); return; }
 
   // Fetch fresh from DB — prevent double-advance from stale local state
-  // streak_count included: _user may be stale if tab was open across midnight
   const { data: fresh, error: fetchErr } = await _supabase
-    .from('users').select('current_day, last_completed_date, streak_count').eq('email', _user.email).single();
+    .from('users').select('current_day, last_completed_date').eq('email', _user.email).single();
   if (fetchErr) { console.error('Fetch error:', fetchErr); return; }
 
   const dbDoneToday = fresh?.last_completed_date
@@ -305,8 +255,8 @@ async function markTodayDone() {
 
   const completedDay = fresh?.current_day || _user.current_day || 1;
   const streakWasBroken = calcStreak(_user) === 0 && completedDay > 1;
-  // Use fresh.streak_count — _user.streak_count could be stale if tab was open overnight
-  const currentStreakCount = fresh?.streak_count ?? _user.streak_count ?? 0;
+  // streak_count: increment if streak alive, reset to 1 if broken or first day
+  const currentStreakCount = _user.streak_count || 0;
   const newStreakCount = streakWasBroken ? 1 : currentStreakCount + 1;
   const nextDay = Math.min(completedDay + 1, 7);
   const nowISO = new Date().toISOString();
@@ -336,35 +286,25 @@ async function markTodayDone() {
 
 // ─── LOAD ───
 async function loadUserFromSupabase() {
-  if (!_emailParam) {
-    console.warn('[Alpino] No email found in localStorage or URL. Showing no-data state.');
-    renderApp(); return;
-  }
-
-  console.log('[Alpino] Loading journey for:', _emailParam);
+  if (!_emailParam) { renderApp(); return; }
 
   const { data, error } = await _supabase
     .from('users').select('*').eq('email', _emailParam).single();
-
-  if (error || !data) {
-    console.error('[Alpino] DB lookup failed for email:', _emailParam, error);
-    renderNoData(_emailParam); return;
-  }
+  if (error || !data) { console.error('Load error:', error); renderApp(); return; }
 
   _user = data;
 
-  // Signup event contract:
-  // Primary: index.html fires 'signup' and sets signup_tracked=true during markDone().
-  // Fallback: if user somehow reaches journey.html with signup_tracked=false
-  // (e.g. DB row created externally, or column was NULL before migration),
-  // fire it here exactly once and mark it done.
-  if (!data.signup_tracked) {
-    await trackEvent('signup', { goal: data.goal, lifestyle: data.lifestyle, source: 'journey_fallback' });
-    await _supabase.from('users').update({ signup_tracked: true }).eq('email', _user.email);
-    _user.signup_tracked = true;
+  // Track signup for first-time users (no completions yet) — top-of-funnel anchor
+  // Without this, you cannot measure visitors → signups → Day 1 funnel
+  const isNewUser = !data.last_completed_date && (data.current_day === 1 || !data.current_day);
+  if (isNewUser) {
+    await trackEvent('signup', {
+      goal: data.goal,
+      lifestyle: data.lifestyle
+    });
   }
 
-  // Track every page visit — measures return visits and day-by-day drop-off
+  // Track page_view — measures return visits, funnel drop-off
   await trackEvent('journey_view', {
     current_day: data.current_day,
     done_today: isDoneToday(data),
@@ -379,7 +319,14 @@ function renderApp() {
   const app = document.getElementById('app');
 
   if (!_user) {
-    renderNoData(_emailParam);
+    app.innerHTML = `
+      <div class="no-data">
+        <div class="no-data-h">No journey found.</div>
+        <p class="no-data-p">Start Day 1 first — your progress will appear here.</p>
+        <a class="no-data-btn" href="index.html">← Start Day 1</a>
+      </div>
+      <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
+    `;
     return;
   }
 

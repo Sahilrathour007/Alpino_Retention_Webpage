@@ -369,12 +369,30 @@ const _supabase = window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
 );
 
-// ─── OPTION A SCHEMA ───
-// email TEXT PRIMARY KEY
-// goal TEXT
-// lifestyle TEXT
-// current_day INT
-// last_completed_date TEXT (ISO string)
+// ─── SCHEMA (must match Supabase exactly) ───
+// TABLE: users
+//   email               TEXT PRIMARY KEY
+//   goal                TEXT
+//   lifestyle           TEXT
+//   current_day         INT       default 1
+//   last_completed_date TEXT      (ISO string)
+//   streak_count        INT       default 0
+//   signup_tracked      BOOLEAN   default false
+//
+// TABLE: events
+//   id                  BIGINT    generated always as identity (primary key)
+//   email               TEXT
+//   event               TEXT      ('signup' | 'journey_view' | 'day_complete')
+//   metadata            JSONB
+//   created_at          TEXT      (ISO string)
+//
+// Run this in Supabase SQL editor if columns are missing:
+//   alter table users add column if not exists streak_count int default 0;
+//   alter table users add column if not exists signup_tracked boolean default false;
+//   create table if not exists events (
+//     id bigint generated always as identity primary key,
+//     email text, event text, metadata jsonb, created_at text
+//   );
 
 let selectedGoal = '';
 let selectedLifestyle = '';
@@ -446,18 +464,40 @@ async function markDone() {
   // 1. Save identity to localStorage so journey page always finds it
   localStorage.setItem('alpino_user_email', capturedEmail);
 
-  // 2. Upsert to Supabase — Option A schema only
-  const { error } = await _supabase
-    .from('users')
-    .upsert([{
+  // 2. Check if user already exists — never overwrite current_day of a returning user
+  const { data: existing } = await _supabase
+    .from('users').select('current_day, signup_tracked').eq('email', capturedEmail).single();
+
+  const isReturningUser = !!existing;
+
+  if (isReturningUser) {
+    // Returning user: only update goal/lifestyle in case they changed answers.
+    // Do NOT touch current_day, streak_count, last_completed_date — those are managed by journey page.
+    await _supabase.from('users')
+      .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
+      .eq('email', capturedEmail);
+  } else {
+    // New user: insert full row with all required columns
+    const { error } = await _supabase.from('users').insert([{
       email: capturedEmail,
       goal: selectedGoal,
       lifestyle: selectedLifestyle,
       current_day: 1,
-      last_completed_date: new Date().toISOString()
-    }], { onConflict: 'email' });
+      last_completed_date: new Date().toISOString(),
+      streak_count: 1,         // Day 1 complete = streak of 1
+      signup_tracked: true     // mark immediately so journey page doesn't double-fire
+    }]);
+    if (error) console.error('Supabase insert error:', error);
 
-  if (error) console.error('Supabase error:', error);
+    // 3. Fire signup event to events table — here, not on journey page
+    // This fires even if user never reaches journey.html — top of funnel anchor
+    await _supabase.from('events').insert([{
+      email: capturedEmail,
+      event: 'signup',
+      metadata: { goal: selectedGoal, lifestyle: selectedLifestyle },
+      created_at: new Date().toISOString()
+    }]);
+  }
 
   showStep(4);
   startRedirectCountdown();

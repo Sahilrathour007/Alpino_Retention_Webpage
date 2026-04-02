@@ -181,8 +181,21 @@ const _supabase = window.supabase.createClient(
 );
 
 // ─── IDENTITY ───
+// Priority order:
+//   1. localStorage (set by index.html at signup — always correct)
+//   2. URL ?email= param (fallback for direct links, but NOT allowed to override a live session)
+// Reason: URL param can be wrong (manually typed, old link, wrong browser).
+// localStorage was written by the app itself at the moment of signup — trust it more.
 const _urlParams = new URLSearchParams(window.location.search);
-const _emailParam = _urlParams.get('email') || localStorage.getItem('alpino_user_email') || '';
+const _localEmail = localStorage.getItem('alpino_user_email') || '';
+const _urlEmail   = _urlParams.get('email') || '';
+// Use localStorage if it exists; fall back to URL param only if localStorage is empty
+const _emailParam = _localEmail || _urlEmail;
+
+// Dev debug — visible in browser console, not in UI
+if (_urlEmail && _localEmail && _urlEmail !== _localEmail) {
+  console.warn('[Alpino] URL email (' + _urlEmail + ') differs from localStorage (' + _localEmail + '). Using localStorage.');
+}
 
 let _user = null;
 
@@ -242,6 +255,24 @@ async function trackEvent(eventName, metadata = {}) {
     created_at: new Date().toISOString()
   }]);
   if (error) console.error('Event track error:', error);
+}
+
+// ─── NO DATA STATE ───
+// Called when DB lookup fails — shows which email was tried so user can self-diagnose
+function renderNoData(attemptedEmail) {
+  const app = document.getElementById('app');
+  const emailDisplay = attemptedEmail
+    ? `<div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px;">Looked up: <strong style="color:var(--amber);">${attemptedEmail}</strong></div>`
+    : '';
+  app.innerHTML = `
+    <div class="no-data">
+      <div class="no-data-h">No journey found.</div>
+      ${emailDisplay}
+      <p class="no-data-p">This email hasn't started Day 1 yet — or you may have signed up with a different address. Check your inbox for the Alpino welcome email to find the right one.</p>
+      <a class="no-data-btn" href="index.html">← Start Day 1</a>
+    </div>
+    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
+  `;
 }
 
 function showToast(msg) {
@@ -305,11 +336,20 @@ async function markTodayDone() {
 
 // ─── LOAD ───
 async function loadUserFromSupabase() {
-  if (!_emailParam) { renderApp(); return; }
+  if (!_emailParam) {
+    console.warn('[Alpino] No email found in localStorage or URL. Showing no-data state.');
+    renderApp(); return;
+  }
+
+  console.log('[Alpino] Loading journey for:', _emailParam);
 
   const { data, error } = await _supabase
     .from('users').select('*').eq('email', _emailParam).single();
-  if (error || !data) { console.error('Load error:', error); renderApp(); return; }
+
+  if (error || !data) {
+    console.error('[Alpino] DB lookup failed for email:', _emailParam, error);
+    renderNoData(_emailParam); return;
+  }
 
   _user = data;
 
@@ -339,14 +379,7 @@ function renderApp() {
   const app = document.getElementById('app');
 
   if (!_user) {
-    app.innerHTML = `
-      <div class="no-data">
-        <div class="no-data-h">No journey found.</div>
-        <p class="no-data-p">Start Day 1 first — your progress will appear here.</p>
-        <a class="no-data-btn" href="index.html">← Start Day 1</a>
-      </div>
-      <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
-    `;
+    renderNoData(_emailParam);
     return;
   }
 

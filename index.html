@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Alpino · Start Day 1</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0}
 :root{
   --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
   --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
@@ -15,154 +15,154 @@
   --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
   --white:#FDFAF5;
 }
-html{scroll-behavior:smooth;}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
-.nav-logo em{color:var(--amber);font-style:normal;}
-.nav-pill{background:var(--green);color:var(--green-lt);font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 9px;margin-left:10px;font-family:'Space Mono',monospace;}
-.ticker{background:var(--green);padding:9px 0;overflow:hidden;white-space:nowrap;}
-.tick-inner{display:inline-flex;gap:52px;animation:scrolltick 22s linear infinite;}
-.tick-item{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green-lt);letter-spacing:3px;}
-.tick-sep{color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:13px;}
-@keyframes scrolltick{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-.hero{display:grid;grid-template-columns:55% 45%;min-height:520px;background:var(--cream);}
-.hero-l{padding:60px 48px 48px;display:flex;flex-direction:column;justify-content:center;}
-.hero-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.hero-tag::before{content:'';display:block;width:20px;height:1px;background:var(--amber);}
-.hero-h{font-family:'Bebas Neue',sans-serif;font-size:82px;line-height:0.9;letter-spacing:1px;color:var(--ink);margin-bottom:20px;}
-.hero-h .a{color:var(--amber);}
-.hero-p{font-size:15px;color:var(--ink-md);line-height:1.78;max-width:380px;margin-bottom:28px;}
-.hero-p strong{color:var(--ink);}
-.hero-form{display:flex;gap:0;margin-bottom:10px;max-width:380px;}
-.hero-email-input{flex:1;background:var(--white);border:1.5px solid var(--cream-border);border-right:none;padding:14px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s;}
-.hero-email-input:focus{border-color:var(--amber);}
-.hero-email-input::placeholder{color:var(--ink-lt);}
-.hero-form-btn{background:var(--amber);color:var(--white);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:14px 20px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;white-space:nowrap;transition:background 0.15s;}
-.hero-form-btn:hover{background:var(--amber-dk);}
-.hero-form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px;}
-.hero-trust{display:flex;gap:8px;flex-wrap:wrap;}
-.trust-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--green-dk);background:var(--green-lt);padding:6px 10px;}
-.trust-chip::before{content:'✓';font-size:9px;}
-.hero-r{background:var(--cream-dk);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px;}
-.hero-bg-text{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:140px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%);}
-.jar{position:relative;display:flex;flex-direction:column;align-items:center;}
-.jar-cap{width:188px;height:26px;background:var(--ink);display:flex;align-items:center;justify-content:center;}
-.jar-cap-text{font-family:'Space Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:4px;}
-.jar-body{width:170px;height:228px;background:var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
-.jar-name{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--white);letter-spacing:5px;line-height:1;}
-.jar-line{width:50px;height:1px;background:rgba(253,250,245,0.3);margin:4px 0;}
-.jar-var{font-family:'Space Mono',monospace;font-size:7px;color:rgba(253,250,245,0.7);letter-spacing:2px;text-align:center;line-height:1.6;}
-.jar-base{width:188px;height:14px;background:var(--amber-dk);}
-.badge-g{position:absolute;top:0;right:-14px;background:var(--green);padding:14px 12px;text-align:center;}
-.badge-g .n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--green-lt);line-height:1;}
-.badge-g .u{font-family:'Space Mono',monospace;font-size:7px;color:rgba(228,240,232,0.7);letter-spacing:1px;margin-top:3px;}
-.badge-day{position:absolute;bottom:18px;left:-8px;background:var(--ink);padding:9px 12px;border-left:3px solid var(--amber);}
-.badge-day .dl{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.5);letter-spacing:1px;}
-.badge-day .dv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);line-height:1;margin-top:2px;letter-spacing:2px;}
-.how{padding:56px 40px;background:var(--cream);}
-.sec-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
-.sec-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:36px;line-height:1;}
-.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cream-border);}
-.step{background:var(--cream);padding:32px 24px;position:relative;}
-.step:first-child{background:var(--amber);}
-.step-num{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;margin-bottom:14px;}
-.step:first-child .step-num{color:rgba(28,28,26,0.12);}
-.step:not(:first-child) .step-num{color:var(--cream-dk);}
-.step-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
-.step:first-child .step-label{color:rgba(28,28,26,0.55);}
-.step:not(:first-child) .step-label{color:var(--amber);}
-.step-title{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--ink);}
-.step-body{font-size:13px;line-height:1.75;}
-.step:first-child .step-body{color:rgba(28,28,26,0.6);}
-.step:not(:first-child) .step-body{color:var(--ink-md);}
-.step-arrow{position:absolute;top:32px;right:-1px;width:22px;height:22px;background:var(--amber);display:flex;align-items:center;justify-content:center;z-index:1;}
-.step-arrow svg{width:10px;height:10px;fill:var(--white);}
-.step:last-child .step-arrow{display:none;}
-.proof{background:var(--cream-dk);padding:56px 40px;}
-.proof-inner{display:grid;grid-template-columns:1fr 2fr;gap:48px;align-items:center;}
-.proof-count{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--amber);line-height:1;}
-.proof-count-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:2px;margin-top:6px;}
-.proof-count-sub{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;margin-top:4px;opacity:0.6;}
-.proof-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
-.proof-stars{display:flex;gap:3px;margin-bottom:14px;}
-.star{width:10px;height:10px;background:var(--amber);}
-.proof-text{font-size:14px;color:var(--ink-md);line-height:1.8;font-style:italic;margin-bottom:18px;}
-.proof-author{display:flex;align-items:center;gap:12px;}
-.proof-avatar{width:32px;height:32px;border-radius:50%;background:var(--cream-dk);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-md);}
-.proof-name{font-size:13px;font-weight:700;color:var(--ink);}
-.proof-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px;}
-.footer{background:var(--ink);padding:36px 40px;display:flex;align-items:center;justify-content:space-between;}
-.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:4px;}
-.footer-logo em{color:var(--amber);font-style:normal;}
-.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1.5px;}
-.footer-links{display:flex;gap:24px;}
-.footer-links span{font-size:12px;color:rgba(253,250,245,0.4);cursor:pointer;}
-.overlay{position:fixed;inset:0;background:rgba(28,28,26,0.82);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
-.overlay.active{display:flex;}
-.modal{background:var(--cream);width:100%;max-width:460px;position:relative;overflow:hidden;}
-.modal-header{background:var(--amber);padding:26px 30px 22px;}
-.modal-header-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
-.modal-header-h{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--ink);line-height:0.92;letter-spacing:1px;}
-.modal-header-h span{color:var(--white);}
-.modal-body{padding:28px 30px;}
-.modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:rgba(28,28,26,0.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink);}
-.form-step{display:none;}
-.form-step.active{display:block;}
-.field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;display:block;}
-.field-input{width:100%;background:var(--white);border:1.5px solid var(--cream-border);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s;}
-.field-input:focus{border-color:var(--amber);}
-.field-group{margin-bottom:18px;}
-.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.choice-btn{background:var(--white);border:1.5px solid var(--cream-border);padding:13px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--ink-md);transition:all 0.15s;text-align:center;}
-.choice-btn:hover,.choice-btn.selected{border-color:var(--amber);background:var(--amber-lt);color:var(--amber-dk);}
-.form-btn{width:100%;background:var(--ink);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;margin-top:8px;}
-.form-btn:hover{background:#2e2e2a;}
-.form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;text-align:center;}
-.step-dots{display:flex;gap:6px;margin-bottom:20px;}
-.dot{width:22px;height:3px;background:var(--cream-border);}
-.dot.on{background:var(--amber);}
-.confirm-screen{padding:36px 30px;text-align:center;}
-.confirm-icon{width:56px;height:56px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
-.confirm-icon svg{width:24px;height:24px;stroke:var(--green-lt);}
-.confirm-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:14px;}
-.confirm-h span{color:var(--amber);}
-.confirm-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:20px;max-width:300px;margin-left:auto;margin-right:auto;}
-.day1-action{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;text-align:left;margin-bottom:20px;}
-.day1-action-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
-.day1-action-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.15;}
-.confirm-summary{background:var(--cream-dk);border:1px solid var(--cream-border);padding:14px 18px;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;line-height:2;}
-.confirm-summary strong{color:var(--amber);}
-.streak-bar{display:flex;gap:4px;margin-top:14px;margin-bottom:8px;}
-.streak-day{flex:1;height:7px;background:var(--cream-border);}
-.streak-day.done{background:var(--amber);}
-.streak-day.today{background:var(--green);}
-.streak-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;display:flex;justify-content:space-between;}
-.done-screen{padding:36px 30px;text-align:center;}
-.done-icon{width:56px;height:56px;background:var(--amber);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
-.done-icon svg{width:24px;height:24px;stroke:var(--white);}
-.done-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:12px;}
-.done-h span{color:var(--amber);}
-.done-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:8px;max-width:300px;margin-left:auto;margin-right:auto;}
-.done-next{font-family:'Space Mono',monospace;font-size:9px;color:var(--green-dk);letter-spacing:1px;background:var(--green-lt);padding:10px 14px;margin:16px 0;}
-.redirect-wrap{margin:12px 0 8px;}
-.redirect-bar-bg{width:100%;height:4px;background:var(--cream-border);overflow:hidden;}
-.redirect-bar{height:100%;background:var(--green);width:0%;transition:none;}
-.redirect-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:6px;margin-bottom:10px;}
-.field-error{border-color:#c0392b!important;}
-.error-msg{font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;margin-top:6px;}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink)}
+.nav-logo em{color:var(--amber);font-style:normal}
+.nav-pill{background:var(--green);color:var(--green-lt);font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 9px;margin-left:10px;font-family:'Space Mono',monospace}
+.ticker{background:var(--green);padding:9px 0;overflow:hidden;white-space:nowrap}
+.tick-inner{display:inline-flex;gap:52px;animation:scrolltick 22s linear infinite}
+.tick-item{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green-lt);letter-spacing:3px}
+.tick-sep{color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:13px}
+@keyframes scrolltick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.hero{display:grid;grid-template-columns:55% 45%;min-height:520px;background:var(--cream)}
+.hero-l{padding:60px 48px 48px;display:flex;flex-direction:column;justify-content:center}
+.hero-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.hero-tag::before{content:'';display:block;width:20px;height:1px;background:var(--amber)}
+.hero-h{font-family:'Bebas Neue',sans-serif;font-size:82px;line-height:0.9;letter-spacing:1px;color:var(--ink);margin-bottom:20px}
+.hero-h .a{color:var(--amber)}
+.hero-p{font-size:15px;color:var(--ink-md);line-height:1.78;max-width:390px;margin-bottom:28px}
+.hero-p strong{color:var(--ink)}
+.hero-form{display:flex;gap:0;margin-bottom:10px;max-width:380px}
+.hero-email-input{flex:1;background:var(--white);border:1.5px solid var(--cream-border);border-right:none;padding:14px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
+.hero-email-input:focus{border-color:var(--amber)}
+.hero-email-input::placeholder{color:var(--ink-lt)}
+.hero-form-btn{background:var(--amber);color:var(--white);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:14px 20px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;white-space:nowrap;transition:background 0.15s}
+.hero-form-btn:hover{background:var(--amber-dk)}
+.hero-form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px}
+.hero-trust{display:flex;gap:8px;flex-wrap:wrap}
+.trust-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--green-dk);background:var(--green-lt);padding:6px 10px}
+.trust-chip::before{content:'✓';font-size:9px}
+.hero-r{background:var(--cream-dk);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px}
+.hero-bg-text{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:140px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%)}
+.jar{position:relative;display:flex;flex-direction:column;align-items:center}
+.jar-cap{width:188px;height:26px;background:var(--ink);display:flex;align-items:center;justify-content:center}
+.jar-cap-text{font-family:'Space Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:4px}
+.jar-body{width:170px;height:228px;background:var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.jar-name{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--white);letter-spacing:5px;line-height:1}
+.jar-line{width:50px;height:1px;background:rgba(253,250,245,0.3);margin:4px 0}
+.jar-var{font-family:'Space Mono',monospace;font-size:7px;color:rgba(253,250,245,0.7);letter-spacing:2px;text-align:center;line-height:1.6}
+.jar-base{width:188px;height:14px;background:var(--amber-dk)}
+.badge-g{position:absolute;top:0;right:-14px;background:var(--green);padding:14px 12px;text-align:center}
+.badge-g .n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--green-lt);line-height:1}
+.badge-g .u{font-family:'Space Mono',monospace;font-size:7px;color:rgba(228,240,232,0.7);letter-spacing:1px;margin-top:3px}
+.badge-day{position:absolute;bottom:18px;left:-8px;background:var(--ink);padding:9px 12px;border-left:3px solid var(--amber)}
+.badge-day .dl{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.5);letter-spacing:1px}
+.badge-day .dv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);line-height:1;margin-top:2px;letter-spacing:2px}
+.how{padding:56px 40px;background:var(--cream)}
+.sec-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.sec-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:36px;line-height:1}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cream-border)}
+.step{background:var(--cream);padding:32px 24px;position:relative}
+.step:first-child{background:var(--amber)}
+.step-num{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;margin-bottom:14px}
+.step:first-child .step-num{color:rgba(28,28,26,0.12)}
+.step:not(:first-child) .step-num{color:var(--cream-dk)}
+.step-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase}
+.step:first-child .step-label{color:rgba(28,28,26,0.55)}
+.step:not(:first-child) .step-label{color:var(--amber)}
+.step-title{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.step-body{font-size:13px;line-height:1.75}
+.step:first-child .step-body{color:rgba(28,28,26,0.6)}
+.step:not(:first-child) .step-body{color:var(--ink-md)}
+.step-arrow{position:absolute;top:32px;right:-1px;width:22px;height:22px;background:var(--amber);display:flex;align-items:center;justify-content:center;z-index:1}
+.step-arrow svg{width:10px;height:10px;fill:var(--white)}
+.step:last-child .step-arrow{display:none}
+.proof{background:var(--cream-dk);padding:56px 40px}
+.proof-inner{display:grid;grid-template-columns:1fr 2fr;gap:48px;align-items:center}
+.proof-count{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--amber);line-height:1}
+.proof-count-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:2px;margin-top:6px}
+.proof-count-sub{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;margin-top:4px;opacity:0.6}
+.proof-card{background:var(--white);border:1px solid var(--cream-border);padding:28px}
+.proof-stars{display:flex;gap:3px;margin-bottom:14px}
+.star{width:10px;height:10px;background:var(--amber)}
+.proof-text{font-size:14px;color:var(--ink-md);line-height:1.8;font-style:italic;margin-bottom:18px}
+.proof-author{display:flex;align-items:center;gap:12px}
+.proof-avatar{width:32px;height:32px;border-radius:50%;background:var(--cream-dk);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-md)}
+.proof-name{font-size:13px;font-weight:700;color:var(--ink)}
+.proof-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px}
+.footer{background:var(--ink);padding:36px 40px;display:flex;align-items:center;justify-content:space-between}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:4px}
+.footer-logo em{color:var(--amber);font-style:normal}
+.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1.5px}
+.footer-links{display:flex;gap:24px}
+.footer-links span{font-size:12px;color:rgba(253,250,245,0.4);cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(28,28,26,0.82);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.active{display:flex}
+.modal{background:var(--cream);width:100%;max-width:460px;position:relative;overflow:hidden}
+.modal-header{background:var(--amber);padding:26px 30px 22px}
+.modal-header-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.modal-header-h{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--ink);line-height:0.92;letter-spacing:1px}
+.modal-header-h span{color:var(--white)}
+.modal-body{padding:28px 30px}
+.modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:rgba(28,28,26,0.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink)}
+.form-step{display:none}
+.form-step.active{display:block}
+.field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;display:block}
+.field-input{width:100%;background:var(--white);border:1.5px solid var(--cream-border);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
+.field-input:focus{border-color:var(--amber)}
+.field-group{margin-bottom:18px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choice-btn{background:var(--white);border:1.5px solid var(--cream-border);padding:13px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--ink-md);transition:all 0.15s;text-align:center}
+.choice-btn:hover,.choice-btn.selected{border-color:var(--amber);background:var(--amber-lt);color:var(--amber-dk)}
+.form-btn{width:100%;background:var(--ink);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;margin-top:8px}
+.form-btn:hover{background:#2e2e2a}
+.form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;text-align:center}
+.step-dots{display:flex;gap:6px;margin-bottom:20px}
+.dot{width:22px;height:3px;background:var(--cream-border)}
+.dot.on{background:var(--amber)}
+.confirm-screen{padding:36px 30px;text-align:center}
+.confirm-icon{width:56px;height:56px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.confirm-icon svg{width:24px;height:24px;stroke:var(--green-lt)}
+.confirm-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:14px}
+.confirm-h span{color:var(--amber)}
+.confirm-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:20px;max-width:300px;margin-left:auto;margin-right:auto}
+.day1-action{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;text-align:left;margin-bottom:20px}
+.day1-action-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px}
+.day1-action-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.15}
+.confirm-summary{background:var(--cream-dk);border:1px solid var(--cream-border);padding:14px 18px;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;line-height:2}
+.confirm-summary strong{color:var(--amber)}
+.streak-bar{display:flex;gap:4px;margin-top:14px;margin-bottom:8px}
+.streak-day{flex:1;height:7px;background:var(--cream-border)}
+.streak-day.done{background:var(--amber)}
+.streak-day.today{background:var(--green)}
+.streak-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;display:flex;justify-content:space-between}
+.done-screen{padding:36px 30px;text-align:center}
+.done-icon{width:56px;height:56px;background:var(--amber);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.done-icon svg{width:24px;height:24px;stroke:var(--white)}
+.done-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:12px}
+.done-h span{color:var(--amber)}
+.done-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:8px;max-width:300px;margin-left:auto;margin-right:auto}
+.done-next{font-family:'Space Mono',monospace;font-size:9px;color:var(--green-dk);letter-spacing:1px;background:var(--green-lt);padding:10px 14px;margin:16px 0}
+.redirect-wrap{margin:12px 0 8px}
+.redirect-bar-bg{width:100%;height:4px;background:var(--cream-border);overflow:hidden}
+.redirect-bar{height:100%;background:var(--green);width:0%}
+.redirect-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:6px;margin-bottom:10px}
+.field-error{border-color:#c0392b!important}
+.error-msg{font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;margin-top:6px}
 @media(max-width:768px){
-  .nav{padding:0 18px;}.nav-pill{display:none;}.hero{grid-template-columns:1fr;min-height:auto;}
-  .hero-l{padding:36px 18px 32px;}.hero-h{font-size:64px;}.hero-r{min-height:280px;padding:28px 18px;}
-  .hero-form{max-width:100%;}.how{padding:44px 18px;}.steps-grid{grid-template-columns:1fr;}
-  .step-arrow{display:none!important;}.proof{padding:44px 18px;}.proof-inner{grid-template-columns:1fr;gap:28px;}
-  .footer{padding:24px 18px;flex-direction:column;gap:14px;text-align:center;}
-  .footer-links{flex-wrap:wrap;justify-content:center;}
+  .nav{padding:0 18px}.nav-pill{display:none}.hero{grid-template-columns:1fr;min-height:auto}
+  .hero-l{padding:36px 18px 32px}.hero-h{font-size:64px}.hero-r{min-height:280px;padding:28px 18px}
+  .hero-form{max-width:100%}.how{padding:44px 18px}.steps-grid{grid-template-columns:1fr}
+  .step-arrow{display:none!important}.proof{padding:44px 18px}.proof-inner{grid-template-columns:1fr;gap:28px}
+  .footer{padding:24px 18px;flex-direction:column;gap:14px;text-align:center}
+  .footer-links{flex-wrap:wrap;justify-content:center}
 }
+.error-banner{margin-top:10px;font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;display:none}
 </style>
 </head>
 <body>
-
 <nav class="nav">
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="nav-logo">AL<em>P</em>INO</div>
@@ -192,6 +192,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
       <input class="hero-email-input" type="email" id="heroEmail" placeholder="yourname@gmail.com" />
       <button class="hero-form-btn" onclick="openModalWithEmail()">Start Day 1 →</button>
     </div>
+    <div class="error-banner" id="heroError">Please enter a valid email address.</div>
     <div class="hero-form-note">Free · No credit card · Unsubscribe anytime</div>
     <div class="hero-trust">
       <div class="trust-chip">No gym required</div>
@@ -338,13 +339,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
           </div>
           <div class="streak-label"><span>Day 1 (today)</span><span>Day 7</span></div>
         </div>
+        <div class="error-msg" id="saveError" style="display:none;text-align:center;margin-bottom:10px;">Something went wrong saving your progress. Try again.</div>
         <button class="form-btn" style="background:var(--green);" onclick="markDone()">I did it — mark Day 1 done ✓</button>
-        <div class="error-msg" id="markDoneError" style="display:none;margin-top:10px;">Something went wrong saving your progress. Please check your connection and try again.</div>
         <div class="form-note" style="margin-top:10px;">Check spam if you don't see the email within 5 minutes.</div>
       </div>
     </div>
 
-    <!-- Step 4: Auto-redirect to journey page -->
     <div class="form-step" id="step4">
       <div class="done-screen">
         <div class="done-icon">
@@ -364,36 +364,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 </div>
 
 <script>
-// ─── SUPABASE INIT ───
 const _supabase = window.supabase.createClient(
   'https://shkbxpsxieyuvonfbntf.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
 );
-
-// ─── SCHEMA (must match Supabase exactly) ───
-// TABLE: users
-//   email               TEXT PRIMARY KEY
-//   goal                TEXT
-//   lifestyle           TEXT
-//   current_day         INT       default 1
-//   last_completed_date TEXT      (ISO string)
-//   streak_count        INT       default 0
-//   signup_tracked      BOOLEAN   default false
-//
-// TABLE: events
-//   id                  BIGINT    generated always as identity (primary key)
-//   email               TEXT
-//   event               TEXT      ('signup' | 'journey_view' | 'day_complete')
-//   metadata            JSONB
-//   created_at          TEXT      (ISO string)
-//
-// Run this in Supabase SQL editor if columns are missing:
-//   alter table users add column if not exists streak_count int default 0;
-//   alter table users add column if not exists signup_tracked boolean default false;
-//   create table if not exists events (
-//     id bigint generated always as identity primary key,
-//     email text, event text, metadata jsonb, created_at text
-//   );
 
 let selectedGoal = '';
 let selectedLifestyle = '';
@@ -418,123 +392,143 @@ const day1Actions = {
   }
 };
 
-function openModalWithEmail() {
-  const val = document.getElementById('heroEmail').value.trim();
-  document.getElementById('overlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-  showStep(1);
-  if (val) document.getElementById('emailInput').value = val;
+const emailOk = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || '').trim());
+
+function normalizeEmail(email){ return (email || '').trim().toLowerCase(); }
+
+function showStep(n){
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('step' + n);
+  if (el) el.classList.add('active');
 }
-function closeModal() {
+
+function closeModal(){
   document.getElementById('overlay').classList.remove('active');
   document.body.style.overflow = '';
 }
-function overlayClick(e) {
+
+function overlayClick(e){
   if (e.target === document.getElementById('overlay')) closeModal();
 }
-function showStep(n) {
-  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-  document.getElementById('step' + n).classList.add('active');
+
+function openModalWithEmail(){
+  const heroVal = document.getElementById('heroEmail').value.trim();
+  const heroError = document.getElementById('heroError');
+  if (!emailOk(heroVal)) {
+    heroError.style.display = 'block';
+    document.getElementById('heroEmail').classList.add('field-error');
+    return;
+  }
+  heroError.style.display = 'none';
+  document.getElementById('heroEmail').classList.remove('field-error');
+  document.getElementById('overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  showStep(1);
+  document.getElementById('emailInput').value = heroVal;
+  capturedEmail = normalizeEmail(heroVal);
 }
-function goStep2() {
+
+function goStep2(){
   const emailEl = document.getElementById('emailInput');
   const errEl = document.getElementById('emailError');
-  const email = emailEl.value.trim();
-  const valid = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if (!valid) { emailEl.classList.add('field-error'); errEl.style.display = 'block'; return; }
+  const email = normalizeEmail(emailEl.value);
+  if (!emailOk(email)) {
+    emailEl.classList.add('field-error');
+    errEl.style.display = 'block';
+    return;
+  }
+  capturedEmail = email;
   emailEl.classList.remove('field-error');
   errEl.style.display = 'none';
-  capturedEmail = email;
   showStep(2);
 }
-function goStep3() {
+
+function selectChoice(btn, group){
+  btn.closest('.choice-grid').querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (group === 'goal') selectedGoal = btn.textContent.trim();
+  if (group === 'lifestyle') selectedLifestyle = btn.textContent.trim();
+}
+
+function goStep3(){
   const errEl = document.getElementById('choiceError');
-  if (!selectedGoal || !selectedLifestyle) { errEl.style.display = 'block'; return; }
+  if (!selectedGoal || !selectedLifestyle) {
+    errEl.style.display = 'block';
+    return;
+  }
   errEl.style.display = 'none';
   document.getElementById('confirmEmail').textContent = capturedEmail;
   document.getElementById('confirmGoal').textContent = selectedGoal;
   document.getElementById('confirmLifestyle').textContent = selectedLifestyle;
-  const actions = (day1Actions[selectedGoal] || day1Actions['Just try it']);
+  const actions = day1Actions[selectedGoal] || day1Actions['Just try it'];
   const action = actions[selectedLifestyle] || actions['Student'];
   document.getElementById('day1ActionLabel').textContent = action.label;
   document.getElementById('day1ActionText').textContent = action.text;
   showStep(3);
 }
 
-async function markDone() {
-  const btn = document.querySelector('#step3 .form-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-
-  // 1. Save identity to localStorage immediately — before any async ops
-  localStorage.setItem('alpino_user_email', capturedEmail);
-
-  // 2. Check if user already exists
-  const { data: existing } = await _supabase
-    .from('users').select('current_day, signup_tracked').eq('email', capturedEmail).maybeSingle();
-
-  const isReturningUser = !!(existing && existing.current_day);
-
-  let saveError = null;
-
-  if (isReturningUser) {
-    // Returning user — only update goal/lifestyle, never touch progress
-    const { error } = await _supabase.from('users')
-      .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
-      .eq('email', capturedEmail);
-    saveError = error;
-  } else {
-    // New user — build row with only the columns that must exist
-    // streak_count and signup_tracked are added gracefully if they exist
-    const newRow = {
-      email: capturedEmail,
-      goal: selectedGoal,
-      lifestyle: selectedLifestyle,
-      current_day: 1,              // Day 1 is active; journey page shows it as done today
-      last_completed_date: new Date().toISOString()
-    };
-
-    // Try inserting with extra columns first
-    const { error: fullError } = await _supabase.from('users').upsert(
-      [{ ...newRow, streak_count: 1, signup_tracked: true }],
-      { onConflict: 'email', ignoreDuplicates: false }
-    );
-
-    if (fullError) {
-      // If insert failed (likely because new columns don't exist yet), retry with base columns only
-      console.warn('Full insert failed, retrying with base columns:', fullError.message);
-      const { error: baseError } = await _supabase.from('users').upsert(
-        [newRow],
-        { onConflict: 'email', ignoreDuplicates: false }
-      );
-      saveError = baseError;
-    }
-
-    // Fire signup event — non-blocking, failure here is acceptable
-    if (!saveError) {
-      _supabase.from('events').insert([{
-        email: capturedEmail,
-        event: 'signup',
-        metadata: { goal: selectedGoal, lifestyle: selectedLifestyle },
-        created_at: new Date().toISOString()
-      }]).then(({ error }) => { if (error) console.warn('Event insert failed:', error.message); });
-    }
+async function markDone(){
+  const saveError = document.getElementById('saveError');
+  saveError.style.display = 'none';
+  const email = normalizeEmail(capturedEmail);
+  if (!emailOk(email)) {
+    saveError.textContent = 'Missing email. Go back and enter it again.';
+    saveError.style.display = 'block';
+    return;
   }
 
-  if (saveError) {
-    // Do NOT redirect — show error so user knows something went wrong
-    console.error('Supabase save error:', saveError);
-    if (btn) { btn.disabled = false; btn.textContent = 'I did it — mark Day 1 done ✓'; }
-    const errDiv = document.getElementById('markDoneError');
-    if (errDiv) errDiv.style.display = 'block';
-    return; // ← critical: stops redirect from firing on failure
-  }
+  localStorage.setItem('alpino_user_email', email);
 
-  // Only reach here if save succeeded
-  showStep(4);
-  startRedirectCountdown();
+  try {
+    const { data: existing, error: selectError } = await _supabase
+      .from('users')
+      .select('email,current_day,streak_count,signup_tracked')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      throw selectError;
+    }
+
+    const nowISO = new Date().toISOString();
+
+    if (existing) {
+      const { error: updateError } = await _supabase
+        .from('users')
+        .update({
+          goal: selectedGoal,
+          lifestyle: selectedLifestyle,
+          signup_tracked: true
+        })
+        .eq('email', email);
+
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await _supabase
+        .from('users')
+        .insert([{
+          email,
+          goal: selectedGoal,
+          lifestyle: selectedLifestyle,
+          current_day: 1,
+          last_completed_date: nowISO,
+          streak_count: 1,
+          signup_tracked: true
+        }]);
+
+      if (insertError) throw insertError;
+    }
+
+    showStep(4);
+    startRedirectCountdown();
+  } catch (err) {
+    console.error(err);
+    saveError.textContent = 'Something went wrong saving your progress. Please check your Supabase table / policies and try again.';
+    saveError.style.display = 'block';
+  }
 }
 
-function startRedirectCountdown() {
+function startRedirectCountdown(){
   const bar = document.getElementById('redirectBar');
   const note = document.getElementById('redirectNote');
   let count = 3;
@@ -553,15 +547,12 @@ function startRedirectCountdown() {
     }
   }, 1000);
 }
-function goToJourney() {
-  window.location.href = `alpino_journey.html?email=${encodeURIComponent(capturedEmail)}`;
+
+function goToJourney(){
+  const email = normalizeEmail(capturedEmail || document.getElementById('emailInput').value);
+  window.location.href = `alpino_journey.html?email=${encodeURIComponent(email)}`;
 }
-function selectChoice(btn, group) {
-  btn.closest('.choice-grid').querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  if (group === 'goal') selectedGoal = btn.textContent;
-  if (group === 'lifestyle') selectedLifestyle = btn.textContent;
-}
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
 </body>

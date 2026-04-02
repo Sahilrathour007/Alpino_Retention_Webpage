@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alpino · Start Day 1</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -362,12 +363,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 </div>
 
 <script>
-const STORAGE_KEY = 'alpino_journey_v2';
+// ─── SUPABASE INIT ───
+const _supabase = window.supabase.createClient(
+  'https://shkbxpsxieyuvonfbntf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
+);
+
+// ─── OPTION A SCHEMA ───
+// email TEXT PRIMARY KEY
+// goal TEXT
+// lifestyle TEXT
+// current_day INT
+// last_completed_date TEXT (ISO string)
+
 let selectedGoal = '';
 let selectedLifestyle = '';
 let capturedEmail = '';
 
-// Goal + Lifestyle aware Day 1 actions
 const day1Actions = {
   'Lose weight': {
     'Student':  { label: '// Skip the canteen biscuit today', text: 'SWAP YOUR MORNING BISCUIT FOR 1 SPOON OF PEANUT BUTTER ON TOAST. THAT\'S YOUR ONLY CHANGE TODAY.' },
@@ -429,26 +441,32 @@ function goStep3() {
   document.getElementById('day1ActionText').textContent = action.text;
   showStep(3);
 }
-function markDone() {
-  const today = new Date().toDateString();
-  const journeyData = {
-    email: capturedEmail,
-    goal: selectedGoal,
-    lifestyle: selectedLifestyle,
-    startDate: new Date().toISOString(),
-    daysCompleted: [1],
-    lastCompletedDate: today,
-    completionDates: { '1': today }
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(journeyData));
+
+async function markDone() {
+  // 1. Save identity to localStorage so journey page always finds it
+  localStorage.setItem('alpino_user_email', capturedEmail);
+
+  // 2. Upsert to Supabase — Option A schema only
+  const { error } = await _supabase
+    .from('users')
+    .upsert([{
+      email: capturedEmail,
+      goal: selectedGoal,
+      lifestyle: selectedLifestyle,
+      current_day: 1,
+      last_completed_date: new Date().toISOString()
+    }], { onConflict: 'email' });
+
+  if (error) console.error('Supabase error:', error);
+
   showStep(4);
   startRedirectCountdown();
 }
+
 function startRedirectCountdown() {
   const bar = document.getElementById('redirectBar');
   const note = document.getElementById('redirectNote');
   let count = 3;
-  // Kick off CSS transition for bar
   requestAnimationFrame(() => {
     bar.style.transition = 'width 3s linear';
     bar.style.width = '100%';
@@ -465,7 +483,7 @@ function startRedirectCountdown() {
   }, 1000);
 }
 function goToJourney() {
-  window.location.href = 'alpino_journey.html';
+  window.location.href = `alpino_journey.html?email=${encodeURIComponent(capturedEmail)}`;
 }
 function selectChoice(btn, group) {
   btn.closest('.choice-grid').querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));

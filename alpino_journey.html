@@ -143,12 +143,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 //              → resets to 0 if user skips a day
 //              → these are TWO SEPARATE concepts in the UI
 //
-// SCHEMA (Supabase):
-//   users   → email, goal, lifestyle, current_day, last_completed_date,
-//             streak_count    int     default 0    — increments on day_complete, resets to 1 on broken streak
-//             signup_tracked  boolean default false — set true after first signup event fires (prevents dupes)
-//   events  → email, event, metadata (jsonb), created_at
-//             Events tracked: signup (once), journey_view, day_complete
+// SCHEMA (Supabase — must exist before this file works):
+//   TABLE: users
+//     email               TEXT PRIMARY KEY
+//     goal                TEXT
+//     lifestyle           TEXT
+//     current_day         INT       default 1
+//     last_completed_date TEXT      (ISO string)
+//     streak_count        INT       default 0    — source of truth for streak display
+//     signup_tracked      BOOLEAN   default false — set true after signup event fires
+//
+//   TABLE: events
+//     id                  BIGINT    generated always as identity (primary key)
+//     email               TEXT
+//     event               TEXT      ('signup' | 'journey_view' | 'day_complete')
+//     metadata            JSONB
+//     created_at          TEXT      (ISO string)
+//
+//   SQL to add missing columns (run once in Supabase SQL editor):
+//     alter table users add column if not exists streak_count int default 0;
+//     alter table users add column if not exists signup_tracked boolean default false;
+//     create table if not exists events (
+//       id bigint generated always as identity primary key,
+//       email text, event text, metadata jsonb, created_at text
+//     );
 //
 // TRIGGER SYSTEM: NOT in this file.
 //   Real retention = server-side cron (Supabase Edge Function)
@@ -295,20 +313,18 @@ async function loadUserFromSupabase() {
 
   _user = data;
 
-  // Track signup exactly once using signup_tracked boolean column.
-  // Previous approach (!last_completed_date) was unreliable — users returning after
-  // abandoning Day 1 would re-trigger the event, polluting funnel data.
+  // Signup event contract:
+  // Primary: index.html fires 'signup' and sets signup_tracked=true during markDone().
+  // Fallback: if user somehow reaches journey.html with signup_tracked=false
+  // (e.g. DB row created externally, or column was NULL before migration),
+  // fire it here exactly once and mark it done.
   if (!data.signup_tracked) {
-    await trackEvent('signup', {
-      goal: data.goal,
-      lifestyle: data.lifestyle
-    });
-    // Mark as tracked so this never fires again, even across sessions
+    await trackEvent('signup', { goal: data.goal, lifestyle: data.lifestyle, source: 'journey_fallback' });
     await _supabase.from('users').update({ signup_tracked: true }).eq('email', _user.email);
     _user.signup_tracked = true;
   }
 
-  // Track page_view — measures return visits, funnel drop-off
+  // Track every page visit — measures return visits and day-by-day drop-off
   await trackEvent('journey_view', {
     current_day: data.current_day,
     done_today: isDoneToday(data),

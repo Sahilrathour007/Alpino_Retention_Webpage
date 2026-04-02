@@ -339,6 +339,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
           <div class="streak-label"><span>Day 1 (today)</span><span>Day 7</span></div>
         </div>
         <button class="form-btn" style="background:var(--green);" onclick="markDone()">I did it — mark Day 1 done ✓</button>
+        <div class="error-msg" id="markDoneError" style="display:none;margin-top:10px;">Something went wrong saving your progress. Please check your connection and try again.</div>
         <div class="form-note" style="margin-top:10px;">Check spam if you don't see the email within 5 minutes.</div>
       </div>
     </div>
@@ -461,44 +462,74 @@ function goStep3() {
 }
 
 async function markDone() {
-  // 1. Save identity to localStorage so journey page always finds it
+  const btn = document.querySelector('#step3 .form-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  // 1. Save identity to localStorage immediately — before any async ops
   localStorage.setItem('alpino_user_email', capturedEmail);
 
-  // 2. Check if user already exists — never overwrite current_day of a returning user
+  // 2. Check if user already exists
   const { data: existing } = await _supabase
-    .from('users').select('current_day, signup_tracked').eq('email', capturedEmail).single();
+    .from('users').select('current_day, signup_tracked').eq('email', capturedEmail).maybeSingle();
 
-  const isReturningUser = !!existing;
+  const isReturningUser = !!(existing && existing.current_day);
+
+  let saveError = null;
 
   if (isReturningUser) {
-    // Returning user: only update goal/lifestyle in case they changed answers.
-    // Do NOT touch current_day, streak_count, last_completed_date — those are managed by journey page.
-    await _supabase.from('users')
+    // Returning user — only update goal/lifestyle, never touch progress
+    const { error } = await _supabase.from('users')
       .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
       .eq('email', capturedEmail);
+    saveError = error;
   } else {
-    // New user: insert full row with all required columns
-    const { error } = await _supabase.from('users').insert([{
+    // New user — build row with only the columns that must exist
+    // streak_count and signup_tracked are added gracefully if they exist
+    const newRow = {
       email: capturedEmail,
       goal: selectedGoal,
       lifestyle: selectedLifestyle,
-      current_day: 1,
-      last_completed_date: new Date().toISOString(),
-      streak_count: 1,         // Day 1 complete = streak of 1
-      signup_tracked: true     // mark immediately so journey page doesn't double-fire
-    }]);
-    if (error) console.error('Supabase insert error:', error);
+      current_day: 1,              // Day 1 is active; journey page shows it as done today
+      last_completed_date: new Date().toISOString()
+    };
 
-    // 3. Fire signup event to events table — here, not on journey page
-    // This fires even if user never reaches journey.html — top of funnel anchor
-    await _supabase.from('events').insert([{
-      email: capturedEmail,
-      event: 'signup',
-      metadata: { goal: selectedGoal, lifestyle: selectedLifestyle },
-      created_at: new Date().toISOString()
-    }]);
+    // Try inserting with extra columns first
+    const { error: fullError } = await _supabase.from('users').upsert(
+      [{ ...newRow, streak_count: 1, signup_tracked: true }],
+      { onConflict: 'email', ignoreDuplicates: false }
+    );
+
+    if (fullError) {
+      // If insert failed (likely because new columns don't exist yet), retry with base columns only
+      console.warn('Full insert failed, retrying with base columns:', fullError.message);
+      const { error: baseError } = await _supabase.from('users').upsert(
+        [newRow],
+        { onConflict: 'email', ignoreDuplicates: false }
+      );
+      saveError = baseError;
+    }
+
+    // Fire signup event — non-blocking, failure here is acceptable
+    if (!saveError) {
+      _supabase.from('events').insert([{
+        email: capturedEmail,
+        event: 'signup',
+        metadata: { goal: selectedGoal, lifestyle: selectedLifestyle },
+        created_at: new Date().toISOString()
+      }]).then(({ error }) => { if (error) console.warn('Event insert failed:', error.message); });
+    }
   }
 
+  if (saveError) {
+    // Do NOT redirect — show error so user knows something went wrong
+    console.error('Supabase save error:', saveError);
+    if (btn) { btn.disabled = false; btn.textContent = 'I did it — mark Day 1 done ✓'; }
+    const errDiv = document.getElementById('markDoneError');
+    if (errDiv) errDiv.style.display = 'block';
+    return; // ← critical: stops redirect from firing on failure
+  }
+
+  // Only reach here if save succeeded
   showStep(4);
   startRedirectCountdown();
 }

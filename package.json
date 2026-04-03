@@ -1,0 +1,8 @@
+{
+  "name": "alpino-landing",
+  "version": "1.0.0",
+  "description": "Alpino Day 1 challenge landing page with Netlify function for email",
+  "dependencies": {
+    "nodemailer": "^6.9.13"
+  }
+}

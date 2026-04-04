@@ -519,12 +519,15 @@ async function markDone(){
       if (insertError) throw insertError;
     }
 
-    // ── SEND DAY 1 EMAIL ──────────────────────────────────────
+    // ── SEND DAY 1 EMAIL via Supabase Edge Function ───────────
     // Fire-and-forget: don't block the UI if email fails
-    fetch('/.netlify/functions/send-email', {
+    fetch('https://shkbxpsxieyuvonfbntf.supabase.co/functions/v1/send-day-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, goal: selectedGoal, lifestyle: selectedLifestyle })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3NjE3MjEsImV4cCI6MjA1OTMzNzcyMX0.p-3RRe7JtzL8OCb_38MmVzBICOzKbf0TNfxgDW7DRXY'
+      },
+      body: JSON.stringify({ email, day: 1 })
     }).catch(err => console.warn('Email send error (non-blocking):', err));
     // ─────────────────────────────────────────────────────────
 

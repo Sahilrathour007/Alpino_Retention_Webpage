@@ -341,9 +341,12 @@ function renderApp() {
   let dayCirclesHTML = '';
   for (let d = 1; d <= 7; d++) {
     const done    = _completedDays.includes(d);
-    const isToday = d === progress && !allDone;
+    // A day is "today-active" only if it's the current progress day AND
+    // the user has NOT already completed something today (doneToday).
+    // If they completed today, the next day is locked until tomorrow.
+    const isToday = d === progress && !allDone && !doneToday;
     let cls = done ? 'done' : isToday ? 'today-active' : 'locked';
-    if (done && isToday) cls = 'today-done';
+    if (done && doneToday && d === progress - 1) cls = 'today-done'; // last completed = today
     dayCirclesHTML += '<div class="day-block"><div class="day-circle ' + cls + '">' +
       (isToday && !done ? '&#9654;' : d) + '</div>' +
       '<div class="day-label ' + (isToday ? 'active-label' : '') + '">' +

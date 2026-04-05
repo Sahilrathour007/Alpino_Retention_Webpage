@@ -234,53 +234,81 @@ function showToast(msg) {
 }
 
 // ─── MARK TODAY DONE ───
+// SINGLE RESPONSIBILITY: Insert 1 event row. Update users. Send email. Done.
 async function markTodayDone() {
   if (!_user) return;
-  if (isDoneToday(_user)) { showToast('✓ Already done today. Come back tomorrow.'); return; }
-  if (!canMarkToday(_user)) { showToast('⏳ Come back tomorrow to mark the next day.'); return; }
 
-  // Fetch fresh from DB — prevent double-advance from stale local state
-  const { data: fresh, error: fetchErr } = await _supabase
-    .from('users').select('current_day, last_completed_date').eq('email', _user.email).single();
-  if (fetchErr) { console.error('Fetch error:', fetchErr); return; }
+  const completedDay = _user.current_day || 1;
 
-  const dbDoneToday = fresh?.last_completed_date
-    ? new Date(fresh.last_completed_date).toDateString() === new Date().toDateString()
-    : false;
-  if (dbDoneToday) {
+  // Guard: check events table (source of truth) for duplicate
+  const { data: existingEvent } = await _supabase
+    .from('events')
+    .select('id')
+    .eq('email', _user.email)
+    .eq('day', completedDay)
+    .eq('event', 'day_complete')
+    .maybeSingle();
+
+  if (existingEvent) {
     showToast('✓ Already done today. Come back tomorrow.');
-    _user = { ..._user, ...fresh };
-    renderApp(); return;
+    return;
   }
 
-  const completedDay = fresh?.current_day || _user.current_day || 1;
+  // Guard: must be a new calendar day vs last completion
+  if (!canMarkToday(_user)) {
+    showToast('⏳ Come back tomorrow to mark the next day.');
+    return;
+  }
+
   const streakWasBroken = calcStreak(_user) === 0 && completedDay > 1;
-  // streak_count: increment if streak alive, reset to 1 if broken or first day
-  const currentStreakCount = _user.streak_count || 0;
-  const newStreakCount = streakWasBroken ? 1 : currentStreakCount + 1;
+  const newStreakCount = streakWasBroken ? 1 : (_user.streak_count || 0) + 1;
   const nextDay = Math.min(completedDay + 1, 7);
   const nowISO = new Date().toISOString();
 
-  const { error } = await _supabase
-    .from('users').update({ current_day: nextDay, last_completed_date: nowISO, streak_count: newStreakCount }).eq('email', _user.email);
-  if (error) { console.error('Update error:', error); return; }
+  // 1. Write to events (source of truth)
+  const { error: eventErr } = await _supabase
+    .from('events')
+    .insert([{
+      email: _user.email,
+      event: 'day_complete',
+      day: completedDay,
+      completed: true,
+      metadata: { goal: _user.goal, lifestyle: _user.lifestyle },
+      created_at: nowISO
+    }]);
+  if (eventErr) { console.error('Event write error:', eventErr); showToast('Error saving. Try again.'); return; }
 
+  // 2. Update users table
+  await _supabase
+    .from('users')
+    .update({
+      current_day: nextDay,
+      last_completed_date: nowISO,
+      streak_count: newStreakCount,
+      last_completed_day: completedDay
+    })
+    .eq('email', _user.email);
+
+  // 3. Send confirmation email (fire and forget - does NOT block UI)
+  fetch('https://shkbxpsxieyuvonfbntf.supabase.co/functions/v1/send-day-email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3NjE3MjEsImV4cCI6MjA1OTMzNzcyMX0.p-3RRe7JtzL8OCb_38MmVzBICOzKbf0TNfxgDW7DRXY'
+    },
+    body: JSON.stringify({ email: _user.email, day: completedDay })
+  }).catch(err => console.warn('Email non-blocking error:', err));
+
+  // 4. Update local state and re-render
   _user.current_day = nextDay;
   _user.last_completed_date = nowISO;
   _user.streak_count = newStreakCount;
-
-  // Track event for analytics
-  await trackEvent('day_complete', {
-    day: completedDay,
-    streak_was_broken: streakWasBroken,
-    goal: _user.goal,
-    lifestyle: _user.lifestyle
-  });
+  _user.last_completed_day = completedDay;
 
   renderApp();
   showToast(streakWasBroken
-    ? '✓ Day ' + completedDay + ' done. Chain restarted. Don\'t stop now.'
-    : '🔥 Day ' + completedDay + ' done. Don\'t break the chain.'
+    ? '✓ Day ' + completedDay + ' done. Chain restarted.'
+    : 'Day ' + completedDay + ' done. Do not break the chain.'
   );
 }
 

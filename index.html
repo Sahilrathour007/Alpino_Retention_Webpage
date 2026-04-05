@@ -320,7 +320,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
           <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg>
         </div>
         <h2 class="confirm-h">YOUR<br><span>DAY 1</span><br>ACTION.</h2>
-        <p class="confirm-p">Check your email for the full plan. But here's what to do right now:</p>
+        <p class="confirm-p">Your Day 1 task is below. Do it today. Come back to your journey page to mark it done.</p>
         <div class="day1-action">
           <div class="day1-action-label" id="day1ActionLabel">// Do this with breakfast today</div>
           <div class="day1-action-text" id="day1ActionText">ADD 1 SPOON OF PEANUT BUTTER TO YOUR BREAKFAST.</div>
@@ -340,8 +340,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
           <div class="streak-label"><span>Day 1 (today)</span><span>Day 7</span></div>
         </div>
         <div class="error-msg" id="saveError" style="display:none;text-align:center;margin-bottom:10px;">Something went wrong saving your progress. Try again.</div>
-        <button class="form-btn" style="background:var(--green);" onclick="markDone()">I did it — mark Day 1 done ✓</button>
-        <div class="form-note" style="margin-top:10px;">Check spam if you don't see the email within 5 minutes.</div>
+        <button class="form-btn" style="background:var(--green);" onclick="markDone()">Save my plan and go to my journey →</button>
+        <div class="form-note" style="margin-top:10px;">Your progress is saved. Mark Day 1 done on your journey page.</div>
       </div>
     </div>
 
@@ -350,9 +350,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
         <div class="done-icon">
           <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"/></svg>
         </div>
-        <h2 class="done-h">DAY 1<br><span>DONE.</span></h2>
-        <p class="done-p">That's the hardest one. You're no longer someone thinking about starting — you've started.</p>
-        <div class="done-next">🔥 Day 2 unlocks tomorrow. Your streak is live.</div>
+        <h2 class="done-h">DAY 1<br><span>STARTS<br>NOW.</span></h2>
+        <p class="done-p">Your task is waiting. Go to your journey page, do it, and mark it done. That's when the chain begins.</p>
+        <div class="done-next">// Go do the task. Then mark it done on your journey page.</div>
         <div class="redirect-wrap">
           <div class="redirect-bar-bg"><div class="redirect-bar" id="redirectBar"></div></div>
           <div class="redirect-note" id="redirectNote">Taking you to your progress in 3…</div>
@@ -468,9 +468,9 @@ function goStep3(){
 }
 
 async function markDone(){
-  // ── INDEX.HTML ONLY JOB: Save user signup data, redirect to journey ──
-  // Marking days done happens ONLY on the journey page.
-  // This function does NOT mark Day 1 complete. It just registers the user.
+  // INDEX ONLY JOB: Save email + goal + lifestyle to users table.
+  // NEVER marks Day 1 complete. NEVER writes to events table.
+  // Journey page is the ONLY place where marking done happens.
   const saveError = document.getElementById('saveError');
   saveError.style.display = 'none';
   const email = normalizeEmail(capturedEmail);
@@ -482,8 +482,10 @@ async function markDone(){
 
   localStorage.setItem('alpino_user_email', email);
 
+  const btn = document.querySelector('#step3 .form-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
   try {
-    // Check if user already exists
     const { data: existing } = await _supabase
       .from('users')
       .select('email')
@@ -491,27 +493,25 @@ async function markDone(){
       .maybeSingle();
 
     if (!existing) {
-      // New user — insert with current_day = 1, no completion yet
       const { error: insertError } = await _supabase
         .from('users')
         .insert([{
           email,
-          goal: selectedGoal,
-          lifestyle: selectedLifestyle,
-          current_day: 1,
-          streak_count: 0,
-          signup_tracked: true
+          goal:            selectedGoal,
+          lifestyle:       selectedLifestyle,
+          current_day:     1,
+          streak_count:    0,
+          signup_tracked:  true
+          // NO last_completed_date — they have not done anything yet
         }]);
       if (insertError) throw insertError;
     } else {
-      // Returning user — update goal/lifestyle only
       await _supabase
         .from('users')
         .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
         .eq('email', email);
     }
 
-    // Show step 4 and redirect — journey page handles everything from here
     showStep(4);
     startRedirectCountdown();
 
@@ -519,6 +519,7 @@ async function markDone(){
     console.error(err);
     saveError.textContent = 'Something went wrong. Please try again.';
     saveError.style.display = 'block';
+    if (btn) { btn.disabled = false; btn.textContent = 'Save my plan and go to my journey →'; }
   }
 }
 

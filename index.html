@@ -456,10 +456,6 @@ function goStep3(){
   document.getElementById('confirmEmail').textContent = capturedEmail;
   document.getElementById('confirmGoal').textContent = selectedGoal;
   document.getElementById('confirmLifestyle').textContent = selectedLifestyle;
-  const actions = day1Actions[selectedGoal] || day1Actions['Just try it'];
-  const action = actions[selectedLifestyle] || actions['Student'];
-  document.getElementById('day1ActionLabel').textContent = action.label;
-  document.getElementById('day1ActionText').textContent = action.text;
   showStep(3);
 }
 

@@ -134,396 +134,426 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-// ALPINO JOURNEY — FINAL CLEAN VERSION
-//
-// DESIGN DECISIONS (explicit):
-//   progress = current_day  → never resets. Duolingo style.
-//   streak   = consecutive calendar days ending today
-//              → resets to 0 if user skips a day
-//              → these are TWO SEPARATE concepts in the UI
-//
-// SCHEMA (Supabase):
-//   users   → email, goal, lifestyle, current_day, last_completed_date, streak_count
-//             streak_count: int, default 0. Incremented on each day_complete.
-//             Resets to 1 on streak broken. Source of truth for streak display.
-//   events  → email, event, metadata (jsonb), created_at
-//             Events tracked: signup, journey_view, day_complete
-//
-// TRIGGER SYSTEM: NOT in this file.
-//   Real retention = server-side cron (Supabase Edge Function)
-//   → reads users where last_completed_date < yesterday
-//   → sends WhatsApp/email via Gupshup or Resend
-//   That is a backend job. This file does not pretend otherwise.
-// ═══════════════════════════════════════════════
+// ALPINO JOURNEY — EVENTS AS SINGLE SOURCE OF TRUTH
+// Architecture:
+//   events table   = ONLY source of truth for completed days
+//   users table    = metadata only (email, goal, lifestyle, streak cache)
+//   _completedDays = array loaded from events, all logic derived from this
+//   UI             = computed, never from users.current_day
+//   email          = output only, never updates DB
 
-const _supabase = window.supabase.createClient(
-  'https://shkbxpsxieyuvonfbntf.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
-);
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ';
+const SUPABASE_URL = 'https://shkbxpsxieyuvonfbntf.supabase.co';
+const _supabase = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 
-// ─── IDENTITY ───
 const _urlParams = new URLSearchParams(window.location.search);
-const _emailParam = _urlParams.get('email') || localStorage.getItem('alpino_user_email') || '';
+const _emailParam = (_urlParams.get('email') || localStorage.getItem('alpino_user_email') || '').toLowerCase().trim();
 
-let _user = null;
+let _user          = null;
+let _completedDays = [];   // loaded from events — THE ONLY TRUTH
+let _isMarking     = false; // race condition lock
 
-// ─── DAY CONTENT ───
-const dayContent = {
-  1: { action: 'Add 1 spoon of peanut butter to breakfast. Don\'t skip it.', tip: 'Add it to roti, toast, or just eat it off the spoon.' },
-  2: { action: 'Add peanut butter to your mid-morning snack instead of biscuits.', tip: 'One small swap compounds over 7 days.' },
-  3: { action: 'Have 2 spoons today. Track how full you feel by noon.', tip: 'Protein keeps you fuller longer. Today you\'ll feel it.' },
-  4: { action: 'Pair peanut butter with a banana for your afternoon snack.', tip: 'Banana + peanut butter = complete snack, no cooking.' },
-  5: { action: 'Replace your evening chai biscuit with peanut butter on toast.', tip: 'If chai happens twice a day, do this at both.' },
-  6: { action: 'Make one full meal protein-focused. Add peanut butter somewhere in it.', tip: 'Dal, eggs, peanut butter — all count as protein.' },
-  7: { action: 'Complete the whole day on plan. You finish the 7-day challenge.', tip: 'After 7 days, this stops feeling like effort.' }
+const DAY_CONTENT = {
+  1: { action: "Add 1 spoon of peanut butter to breakfast. Don't skip it.",           tip: "Roti, toast, or straight from the spoon." },
+  2: { action: "Add peanut butter to your mid-morning snack instead of biscuits.",    tip: "One small swap compounds over 7 days." },
+  3: { action: "Have 2 spoons today. Track how full you feel by noon.",               tip: "Protein keeps you fuller longer. Today you'll feel it." },
+  4: { action: "Pair peanut butter with a banana for your afternoon snack.",          tip: "Banana + peanut butter = complete snack, no cooking." },
+  5: { action: "Replace your evening chai biscuit with peanut butter on toast.",      tip: "If chai happens twice a day, do this at both." },
+  6: { action: "Make one full meal protein-focused. Add peanut butter in it.",        tip: "Dal, eggs, peanut butter - all count as protein." },
+  7: { action: "Complete the whole day on plan. You finish the 7-day challenge.",     tip: "After 7 days, this stops feeling like effort." }
 };
 
-// ─── STREAK LOGIC ───
-// progress (current_day) and streak are SEPARATE.
-// progress never resets. streak resets if user skips a calendar day.
-// streak_count is stored in DB and incremented on each day_complete.
-// If last_completed_date is 2+ days ago, streak is dead regardless of streak_count.
-function calcStreak(user) {
-  if (!user.last_completed_date) return 0;
-  const last = new Date(user.last_completed_date);
-  const now = new Date();
+// ALL computed from _completedDays — never from users table
+function getProgress() {
+  if (_completedDays.length === 0) return 1;
+  return Math.min(Math.max(..._completedDays) + 1, 7);
+}
+
+function isDoneToday() {
+  if (!_user || !_user.last_completed_date) return false;
+  return new Date(_user.last_completed_date).toDateString() === new Date().toDateString();
+}
+
+function calcStreak() {
+  if (!_user || !_user.last_completed_date) return 0;
+  const last = new Date(_user.last_completed_date);
   const lastCal = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
-  const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const diffDays = Math.round((todayCal - lastCal) / 86400000);
-
-  // diffDays 0 = completed today, 1 = completed yesterday (streak alive), 2+ = broken
-  if (diffDays <= 1) return user.streak_count || 1; // ← use stored streak_count, not current_day
-  return 0; // streak broken — progress preserved separately
-}
-
-function canMarkToday(user) {
-  if (!user.last_completed_date) return true;
-  const last = new Date(user.last_completed_date);
   const now = new Date();
-  const lastCal = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
   const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return todayCal > lastCal; // must be a different calendar day
-}
-
-function isDoneToday(user) {
-  if (!user.last_completed_date) return false;
-  return new Date(user.last_completed_date).toDateString() === new Date().toDateString();
-}
-
-// ─── EVENT TRACKING ───
-// Writes to `events` table: email, event, metadata, created_at
-// Enables: signup rate, D1 completion, D2 retention, streak_broken rate
-// All queryable directly in Supabase dashboard — no third party needed
-async function trackEvent(eventName, metadata = {}) {
-  if (!_emailParam) return;
-  const { error } = await _supabase.from('events').insert([{
-    email: _emailParam,
-    event: eventName,
-    metadata,
-    created_at: new Date().toISOString()
-  }]);
-  if (error) console.error('Event track error:', error);
+  const diff = Math.round((todayCal - lastCal) / 86400000);
+  return diff <= 1 ? (_user.streak_count || 1) : 0;
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(function() { t.classList.remove('show'); }, 3200);
 }
 
-// ─── MARK TODAY DONE ───
-// SINGLE RESPONSIBILITY: Insert 1 event row. Update users. Send email. Done.
+// THE ONLY PLACE THAT WRITES TO DB
 async function markTodayDone() {
-  if (!_user) return;
+  if (!_user || _isMarking) return;
 
-  const completedDay = _user.current_day || 1;
+  _isMarking = true;
+  const btn = document.querySelector('.mark-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
-  // Guard: check events table (source of truth) for duplicate
-  const { data: existingEvent } = await _supabase
-    .from('events')
-    .select('id')
-    .eq('email', _user.email)
-    .eq('day', completedDay)
-    .eq('event', 'day_complete')
-    .maybeSingle();
+  try {
+    const dayToMark = getProgress();
 
-  if (existingEvent) {
-    showToast('✓ Already done today. Come back tomorrow.');
-    return;
+    // Hard block 1: already completed this exact day number
+    if (_completedDays.includes(dayToMark)) {
+      showToast('Already done. Come back tomorrow.');
+      return;
+    }
+
+    // Hard block 2: already marked something today by date
+    if (isDoneToday()) {
+      showToast('Already marked today. Come back tomorrow.');
+      return;
+    }
+
+    // Hard block 3: challenge finished
+    if (_completedDays.length >= 7) {
+      showToast('Challenge complete! All 7 days done.');
+      return;
+    }
+
+    const nowISO = new Date().toISOString();
+    const streakWasBroken = calcStreak() === 0 && _completedDays.length > 0;
+    const newStreakCount = streakWasBroken ? 1 : (_user.streak_count || 0) + 1;
+
+    // WRITE 1: events table — source of truth
+    const insertResult = await _supabase
+      .from('events')
+      .insert([{
+        email:      _user.email,
+        event:      'day_complete',
+        day:        dayToMark,
+        completed:  true,
+        metadata:   { goal: _user.goal, lifestyle: _user.lifestyle },
+        created_at: nowISO
+      }]);
+
+    if (insertResult.error) {
+      console.error('Event insert failed:', insertResult.error);
+      showToast('Error saving. Try again.');
+      return;
+    }
+
+    // WRITE 2: users table — cache only, not truth
+    await _supabase
+      .from('users')
+      .update({
+        last_completed_date: nowISO,
+        streak_count:        newStreakCount,
+        last_completed_day:  dayToMark,
+        current_day:         Math.min(dayToMark + 1, 7)
+      })
+      .eq('email', _user.email);
+
+    // Update local state to match what we just wrote
+    _completedDays.push(dayToMark);
+    _user.last_completed_date = nowISO;
+    _user.streak_count = newStreakCount;
+
+    // Fire email — non-blocking, never affects UI flow
+    fetch(SUPABASE_URL + '/functions/v1/send-day-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ANON_KEY },
+      body: JSON.stringify({ email: _user.email, day: dayToMark })
+    }).catch(function(e) { console.warn('Email non-blocking:', e); });
+
+    renderApp();
+    showToast(streakWasBroken
+      ? 'Day ' + dayToMark + ' done. Chain restarted.'
+      : 'Day ' + dayToMark + ' done. Do not break the chain.'
+    );
+
+  } finally {
+    _isMarking = false;
   }
-
-  // Guard: must be a new calendar day vs last completion
-  if (!canMarkToday(_user)) {
-    showToast('⏳ Come back tomorrow to mark the next day.');
-    return;
-  }
-
-  const streakWasBroken = calcStreak(_user) === 0 && completedDay > 1;
-  const newStreakCount = streakWasBroken ? 1 : (_user.streak_count || 0) + 1;
-  const nextDay = Math.min(completedDay + 1, 7);
-  const nowISO = new Date().toISOString();
-
-  // 1. Write to events (source of truth)
-  const { error: eventErr } = await _supabase
-    .from('events')
-    .insert([{
-      email: _user.email,
-      event: 'day_complete',
-      day: completedDay,
-      completed: true,
-      metadata: { goal: _user.goal, lifestyle: _user.lifestyle },
-      created_at: nowISO
-    }]);
-  if (eventErr) { console.error('Event write error:', eventErr); showToast('Error saving. Try again.'); return; }
-
-  // 2. Update users table
-  await _supabase
-    .from('users')
-    .update({
-      current_day: nextDay,
-      last_completed_date: nowISO,
-      streak_count: newStreakCount,
-      last_completed_day: completedDay
-    })
-    .eq('email', _user.email);
-
-  // 3. Send confirmation email (fire and forget - does NOT block UI)
-  fetch('https://shkbxpsxieyuvonfbntf.supabase.co/functions/v1/send-day-email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3NjE3MjEsImV4cCI6MjA1OTMzNzcyMX0.p-3RRe7JtzL8OCb_38MmVzBICOzKbf0TNfxgDW7DRXY'
-    },
-    body: JSON.stringify({ email: _user.email, day: completedDay })
-  }).catch(err => console.warn('Email non-blocking error:', err));
-
-  // 4. Update local state and re-render
-  _user.current_day = nextDay;
-  _user.last_completed_date = nowISO;
-  _user.streak_count = newStreakCount;
-  _user.last_completed_day = completedDay;
-
-  renderApp();
-  showToast(streakWasBroken
-    ? '✓ Day ' + completedDay + ' done. Chain restarted.'
-    : 'Day ' + completedDay + ' done. Do not break the chain.'
-  );
 }
 
-// ─── LOAD ───
-async function loadUserFromSupabase() {
+async function loadApp() {
   if (!_emailParam) { renderApp(); return; }
 
-  const { data, error } = await _supabase
-    .from('users').select('*').eq('email', _emailParam).single();
-  if (error || !data) { console.error('Load error:', error); renderApp(); return; }
+  // Load user metadata
+  const userResult = await _supabase
+    .from('users')
+    .select('email, goal, lifestyle, streak_count, last_completed_date, last_completed_day, current_day')
+    .eq('email', _emailParam)
+    .maybeSingle();
 
-  _user = data;
+  if (userResult.error || !userResult.data) {
+    console.error('User not found:', userResult.error);
+    renderApp();
+    return;
+  }
+  _user = userResult.data;
 
-  // Track signup for first-time users (no completions yet) — top-of-funnel anchor
-  // Without this, you cannot measure visitors → signups → Day 1 funnel
-  const isNewUser = !data.last_completed_date && (data.current_day === 1 || !data.current_day);
-  if (isNewUser) {
-    await trackEvent('signup', {
-      goal: data.goal,
-      lifestyle: data.lifestyle
-    });
+  // Load completed days from events — THIS IS THE TRUTH
+  const eventsResult = await _supabase
+    .from('events')
+    .select('day')
+    .eq('email', _emailParam)
+    .eq('event', 'day_complete')
+    .eq('completed', true);
+
+  if (eventsResult.error) {
+    console.error('Events fetch error:', eventsResult.error);
   }
 
-  // Track page_view — measures return visits, funnel drop-off
-  await trackEvent('journey_view', {
-    current_day: data.current_day,
-    done_today: isDoneToday(data),
-    streak: calcStreak(data)
-  });
+  // Deduplicate — if DB somehow has duplicates, UI still correct
+  const rawDays = (eventsResult.data || []).map(function(e) { return e.day; }).filter(Boolean);
+  _completedDays = rawDays.filter(function(d, i) { return rawDays.indexOf(d) === i; });
 
   renderApp();
 }
 
-// ─── RENDER ───
 function renderApp() {
   const app = document.getElementById('app');
+  if (!app) return;
 
   if (!_user) {
-    app.innerHTML = `
-      <div class="no-data">
-        <div class="no-data-h">No journey found.</div>
-        <p class="no-data-p">Start Day 1 first — your progress will appear here.</p>
-        <a class="no-data-btn" href="index.html">← Start Day 1</a>
-      </div>
-      <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">© 2025 Alpino Health Foods</div></footer>
-    `;
+    app.innerHTML = '<div class="no-data"><div class="no-data-h">No journey found.</div><p class="no-data-p">Start Day 1 first.</p><a class="no-data-btn" href="index.html">Start Day 1</a></div>';
     return;
   }
 
-  // ── Two explicitly separate concepts ──
-  const progress = _user.current_day || 1;   // never resets — how far they've come
-  const streak = calcStreak(_user);           // resets on skip — today's momentum
-  const doneToday = isDoneToday(_user);
-  const streakBroken = !doneToday && streak === 0 && progress > 1;
-  const nextDay = Math.min(progress + 1, 7);
-  const pct = Math.round((progress / 7) * 100);
-  const allDone = progress >= 7 && doneToday;
-  const todayContent = dayContent[progress] || dayContent[7];
-  const nextContent = dayContent[nextDay] || dayContent[7];
+  const progress     = getProgress();
+  const doneToday    = isDoneToday();
+  const streak       = calcStreak();
+  const allDone      = _completedDays.length >= 7;
+  const streakBroken = !doneToday && streak === 0 && _completedDays.length > 0;
+  const pct          = Math.round((_completedDays.length / 7) * 100);
+  const todayContent = DAY_CONTENT[progress] || DAY_CONTENT[7];
+  const nextProgress = Math.min(progress + 1, 7);
+  const nextContent  = DAY_CONTENT[nextProgress] || DAY_CONTENT[7];
 
-  document.getElementById('navStreakText').textContent =
-    streak > 0 ? streak + '-day streak 🔥' : 'Streak broken';
+  const navStreak = document.getElementById('navStreakText');
+  if (navStreak) navStreak.textContent = streak > 0 ? streak + '-day streak' : 'Streak broken';
 
-  const streakMessages = {
-    0: streakBroken ? 'You\'ve been here before. Pick it back up today.' : 'Start here.',
-    1: 'Day 1 done. The chain has begun.',
-    2: "Two days in. Don't break it now.",
-    3: 'Three days. It\'s becoming real.',
-    4: 'Halfway. Most people quit here. You didn\'t.',
-    5: 'Five days. This is a habit now.',
-    6: 'One more. You\'re almost there.',
-    7: '7 days done. You built a real habit.'
-  };
+  const streakMsg = ['Start here.', 'Day 1 done. The chain has begun.', "Two days in. Don't break it now.",
+    "Three days. It's becoming real.", "Halfway. Most people quit here. You didn't.",
+    "Five days. This is a habit now.", "One more. You're almost there.", "7 days done. You built a real habit."];
 
-  // Day circles — progress drives unlocked state, doneToday drives today circle
   let dayCirclesHTML = '';
   for (let d = 1; d <= 7; d++) {
-    const done = d < progress || (d === progress && doneToday);
-    const isToday = d === progress;
-    const locked = d > progress;
-    const cls = done && isToday ? 'today-done' : done ? 'done' : isToday ? 'today-active' : 'locked';
-    dayCirclesHTML += `
-      <div class="day-block">
-        <div class="day-circle ${cls}">${isToday && !doneToday ? '▶' : d}</div>
-        <div class="day-label ${isToday ? 'active-label' : ''}">${isToday ? 'TODAY' : 'DAY ' + d}</div>
-      </div>`;
+    const done    = _completedDays.includes(d);
+    const isToday = d === progress && !allDone;
+    let cls = done ? 'done' : isToday ? 'today-active' : 'locked';
+    if (done && isToday) cls = 'today-done';
+    dayCirclesHTML += '<div class="day-block"><div class="day-circle ' + cls + '">' +
+      (isToday && !done ? '&#9654;' : d) + '</div>' +
+      '<div class="day-label ' + (isToday ? 'active-label' : '') + '">' +
+      (isToday ? 'TODAY' : 'DAY ' + d) + '</div></div>';
   }
 
-  // Chain dots
   let chainDots = '';
   for (let i = 1; i <= 7; i++) {
-    const done = i < progress || (i === progress && doneToday);
-    chainDots += `<div class="chain-dot ${done ? 'filled' : ''}"></div>`;
+    chainDots += '<div class="chain-dot ' + (_completedDays.includes(i) ? 'filled' : '') + '"></div>';
   }
 
-  // Re-engagement hook: when streak is broken, show what they've earned — not shame, stakes
-  // "You got to Day X. That's real. One action today keeps it alive."
-  const reEngageHTML = streakBroken ? `
-    <div style="background:var(--ink);border-left:4px solid #c0392b;padding:18px 20px;margin-bottom:16px;">
-      <div style="font-family:'Space Mono',monospace;font-size:8px;color:#c0392b;letter-spacing:2px;margin-bottom:8px;">// You stopped at Day ${progress}</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);line-height:1.2;letter-spacing:1px;">YOU'VE COME ${progress - 1} DAY${progress > 2 ? 'S' : ''}.<br>ONE ACTION TODAY KEEPS IT.</div>
-      <div style="font-size:12px;color:rgba(253,250,245,0.5);margin-top:10px;line-height:1.7;">Your progress is saved. Your streak broke — but your habit didn't have to. Do today's action and the chain restarts.</div>
-    </div>
-  ` : '';
+  const reEngageHTML = streakBroken
+    ? '<div style="background:var(--ink);border-left:4px solid #c0392b;padding:18px 20px;margin-bottom:16px;">' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:8px;color:#c0392b;letter-spacing:2px;margin-bottom:8px;">// Streak broken</div>' +
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--white);line-height:1.2;">DO TODAY\'S ACTION. RESTART THE CHAIN.</div>' +
+      '<div style="font-size:12px;color:rgba(253,250,245,0.5);margin-top:10px;">Progress saved. Come back today.</div></div>'
+    : '';
 
-  // Action block
-  const actionHTML = doneToday
-    ? `<div class="already-done-msg">✓ Day ${progress} done. Come back tomorrow — don't break the chain.</div>`
-    : `
-      ${reEngageHTML}
-      <div class="action-box" style="${streakBroken ? 'border-color:#c0392b;' : ''}">
-        <div class="action-box-label" style="${streakBroken ? 'color:#c0392b;' : ''}">// Day ${progress} — do this today</div>
-        <div class="action-box-text">${todayContent.action}</div>
-      </div>
-      <button class="mark-btn" style="${streakBroken ? 'background:#c0392b;' : ''}" onclick="markTodayDone()">
-        ${streakBroken ? 'Restart the chain — Day ' + progress + ' done ✓' : 'Mark Day ' + progress + ' done ✓'}
-      </button>
-    `;
+  const markBtnHTML = '<button class="mark-btn" onclick="markTodayDone()">' +
+    (streakBroken ? 'Restart - Day ' + progress + ' done' : 'Mark Day ' + progress + ' done') + '</button>';
 
-  const nextActionSection = doneToday && !allDone ? `
-    <div class="complete-hook">
-      <div class="ch-tag">// Day ${progress} complete</div>
-      <div class="ch-h">COME BACK<br>TOMORROW.</div>
-      <div class="ch-body">Day ${nextDay} unlocks tomorrow. ${nextContent.tip}</div>
-      <div class="ch-actions">
-        <button class="ch-btn-primary" onclick="setReminder()">⏰ Set tomorrow's reminder</button>
-        <button class="ch-btn-secondary" onclick="shareProgress()">Share my streak →</button>
-      </div>
-    </div>
-  ` : allDone ? `
-    <div class="complete-hook">
-      <div class="ch-tag">// 7-day challenge complete</div>
-      <div class="ch-h">YOU BUILT<br>A HABIT.</div>
-      <div class="ch-body">7 days of peanut butter. You've rewired one small behaviour. That's how lasting change works.</div>
-      <div class="ch-actions">
-        <button class="ch-btn-primary" onclick="shareProgress()">Share my achievement →</button>
-      </div>
-    </div>
-  ` : '';
+  const actionHTML = (doneToday || allDone)
+    ? '<div class="already-done-msg">Day ' + (allDone ? 7 : progress - 1) + ' done. Come back tomorrow - do not break the chain.</div>'
+    : reEngageHTML +
+      '<div class="action-box"><div class="action-box-label">// Day ' + progress + ' - do this today</div>' +
+      '<div class="action-box-text">' + todayContent.action + '</div></div>' + markBtnHTML;
 
-  app.innerHTML = `
-    <div class="journey-header">
-      <div class="jh-bg">JOURNEY</div>
-      <div class="jh-tag">// Your progress</div>
-      <div class="jh-h">YOU'RE ON<br><em>DAY ${progress}.</em></div>
-      <div class="jh-sub">${doneToday ? '✓ TODAY DONE · COME BACK TOMORROW' : streakBroken ? '⚠ STREAK BROKEN — PROGRESS SAVED' : 'CONSISTENCY STARTS HERE'}</div>
-    </div>
+  const nextSection = (doneToday || allDone) ? (allDone
+    ? '<div class="complete-hook"><div class="ch-tag">// 7-day challenge complete</div><div class="ch-h">YOU BUILT<br>A HABIT.</div>' +
+      '<div class="ch-body">7 days of peanut butter. You rewired one small behaviour.</div>' +
+      '<div class="ch-actions"><button class="ch-btn-primary" onclick="shareProgress()">Share my achievement</button></div></div>'
+    : '<div class="complete-hook"><div class="ch-tag">// Day ' + (progress - 1) + ' complete</div><div class="ch-h">COME BACK<br>TOMORROW.</div>' +
+      '<div class="ch-body">Day ' + progress + ' unlocks tomorrow. ' + nextContent.tip + '</div>' +
+      '<div class="ch-actions"><button class="ch-btn-secondary" onclick="shareProgress()">Share my streak</button></div></div>'
+  ) : '';
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);">
+  app.innerHTML =
+    '<div class="journey-header"><div class="jh-bg">JOURNEY</div>' +
+    '<div class="jh-tag">// Your progress</div>' +
+    '<div class="jh-h">YOU\'RE ON<br><em>DAY ' + progress + '.</em></div>' +
+    '<div class="jh-sub">' + (doneToday || allDone ? 'TODAY DONE - COME BACK TOMORROW' : streakBroken ? 'STREAK BROKEN - PROGRESS SAVED' : 'CONSISTENCY STARTS HERE') + '</div></div>' +
 
-      <div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;${streakBroken ? 'background:var(--ink);' : ''}">
-        <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:${streakBroken ? 'rgba(253,250,245,0.3)' : 'rgba(28,28,26,0.4)'};margin-bottom:4px;">// STREAK</div>
-        <div class="streak-num" style="${streakBroken ? 'color:#c0392b;font-size:72px;' : ''}">${streak}</div>
-        <div class="streak-title" style="font-size:14px;${streakBroken ? 'color:var(--amber);' : ''}">${streak === 0 ? 'BROKEN' : streak === 1 ? 'DAY IN A ROW' : 'DAYS IN A ROW'}</div>
-        <div style="font-size:11px;${streakBroken ? 'color:rgba(253,250,245,0.4);' : 'color:var(--ink-md);'};margin-top:4px;">${streakMessages[Math.min(streak, 7)]}</div>
-      </div>
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);">' +
+    '<div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;' + (streakBroken ? 'background:var(--ink);' : '') + '">' +
+    '<div style="font-family:\'Space Mono\',monospace;font-size:8px;letter-spacing:2px;color:' + (streakBroken ? 'rgba(253,250,245,0.3)' : 'rgba(28,28,26,0.4)') + ';margin-bottom:4px;">// STREAK</div>' +
+    '<div class="streak-num" style="' + (streakBroken ? 'color:#c0392b;font-size:72px;' : '') + '">' + streak + '</div>' +
+    '<div class="streak-title" style="font-size:14px;' + (streakBroken ? 'color:var(--amber);' : '') + '">' + (streak === 0 ? 'BROKEN' : streak === 1 ? 'DAY IN A ROW' : 'DAYS IN A ROW') + '</div>' +
+    '<div style="font-size:11px;color:' + (streakBroken ? 'rgba(253,250,245,0.4)' : 'var(--ink-md)') + ';margin-top:4px;">' + streakMsg[Math.min(streak, 7)] + '</div></div>' +
 
-      <div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;">
-        <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.4);margin-bottom:4px;">// PROGRESS</div>
-        <div class="streak-num">${progress}</div>
-        <div class="streak-title" style="font-size:14px;">${progress === 7 ? 'DAYS DONE' : 'OF 7 DAYS'}</div>
-        <div style="font-size:11px;color:var(--ink-md);margin-top:4px;">${progress === 7 ? 'Challenge complete.' : (7 - progress) + ' day' + (7 - progress !== 1 ? 's' : '') + ' to go.'}</div>
-      </div>
+    '<div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;">' +
+    '<div style="font-family:\'Space Mono\',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.4);margin-bottom:4px;">// PROGRESS</div>' +
+    '<div class="streak-num">' + _completedDays.length + '</div>' +
+    '<div class="streak-title" style="font-size:14px;">' + (_completedDays.length === 7 ? 'DAYS DONE' : 'OF 7 DAYS') + '</div>' +
+    '<div style="font-size:11px;color:var(--ink-md);margin-top:4px;">' + (_completedDays.length === 7 ? 'Challenge complete.' : (7 - _completedDays.length) + ' days to go.') + '</div></div></div>' +
 
-    </div>
+    '<div class="progress-section"><div class="ps-tag">// 7-day challenge</div><div class="ps-h">YOUR WEEK</div>' +
+    '<div class="days-grid">' + dayCirclesHTML + '</div>' +
+    '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>' +
+    '<div class="progress-pct">' + _completedDays.length + ' of 7 days - ' + pct + '%</div></div>' +
 
-    <div class="progress-section">
-      <div class="ps-tag">// 7-day challenge</div>
-      <div class="ps-h">YOUR WEEK</div>
-      <div class="days-grid">${dayCirclesHTML}</div>
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-      <div class="progress-pct">${progress} of 7 days · ${pct}%</div>
-    </div>
+    '<div class="today-section"><div class="ts-tag">// Today\'s action</div><div class="ts-card">' +
+    '<div class="ts-status-row"><div class="ts-status-dot ' + (doneToday || allDone ? 'green' : streakBroken ? 'red' : 'amber') + '"></div>' +
+    '<div class="ts-status-text">' + (doneToday || allDone ? 'DAY ' + (allDone ? 7 : progress - 1) + ' COMPLETE' : 'DAY ' + progress + ' - WAITING FOR YOU') + '</div></div>' +
+    actionHTML + '</div></div>' + nextSection +
 
-    <div class="today-section">
-      <div class="ts-tag">// Today's action</div>
-      <div class="ts-card">
-        <div class="ts-status-row">
-          <div class="ts-status-dot ${doneToday ? 'green' : streakBroken ? 'red' : 'amber'}"></div>
-          <div class="ts-status-text">${doneToday ? 'DAY ' + progress + ' COMPLETE' : 'DAY ' + progress + ' — WAITING FOR YOU'}</div>
-        </div>
-        ${actionHTML}
-      </div>
-    </div>
+    '<div class="chain-section"><div class="chain-h">DON\'T<br>BREAK<br>THE CHAIN.</div>' +
+    '<div class="chain-sub">// ' + _completedDays.length + ' of 7 days complete</div>' +
+    '<div class="chain-dots">' + chainDots + '</div></div>' +
 
-    ${nextActionSection}
-
-    <div class="chain-section">
-      <div class="chain-h">DON'T<br>BREAK<br>THE CHAIN.</div>
-      <div class="chain-sub">// ${progress} of 7 days complete</div>
-      <div class="chain-dots">${chainDots}</div>
-    </div>
-
-    <footer class="footer">
-      <div class="footer-logo">AL<em>P</em>INO</div>
-      <div class="footer-line">© 2025 Alpino Health Foods · Your journey, day by day</div>
-    </footer>
-  `;
-}
-
-function setReminder() {
-  showToast('💡 Set a phone alarm for 8am tomorrow — don\'t break the chain.');
+    '<footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div>' +
+    '<div class="footer-line">2025 Alpino Health Foods - Your journey, day by day</div></footer>';
 }
 
 function shareProgress() {
   if (!_user) return;
-  const streak = calcStreak(_user);
-  const text = streak > 0
-    ? 'Day ' + _user.current_day + ' done. ' + streak + '-day streak with Alpino. 🥜🔥'
-    : 'Back on track with Alpino. Day ' + _user.current_day + '. 🥜';
-  if (navigator.share) { navigator.share({ title: 'My Alpino Journey', text }); }
-  else { navigator.clipboard.writeText(text).then(() => showToast('✓ Copied!')); }
+  const text = 'Day ' + getProgress() + ' with Alpino peanut butter. Building the habit.';
+  if (navigator.share) { navigator.share({ title: 'My Alpino Journey', text: text }); }
+  else { navigator.clipboard.writeText(text).then(function() { showToast('Copied!'); }); }
 }
 
-loadUserFromSupabase();
+loadApp();
 </script>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
+  --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
+  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
+  --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
+  --white:#FDFAF5;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
+.nav-logo em{color:var(--amber);font-style:normal;}
+.nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;}
+.nav-streak .fire{font-size:14px;}
+.journey-header{background:var(--ink);padding:48px 40px 40px;position:relative;overflow:hidden;}
+.jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
+.jh-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:12px;}
+.jh-h{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:0.9;letter-spacing:1px;margin-bottom:8px;}
+.jh-h em{color:var(--amber);font-style:normal;}
+.jh-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.4);letter-spacing:2px;}
+.streak-section{background:var(--amber);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.streak-main{display:flex;align-items:flex-end;gap:16px;}
+.streak-num{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--ink);line-height:0.85;}
+.streak-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.streak-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);line-height:1;letter-spacing:1px;}
+.streak-msg{font-size:13px;color:rgba(28,28,26,0.65);margin-top:6px;max-width:260px;line-height:1.6;}
+.streak-broken{background:var(--ink);color:var(--amber);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-top:8px;display:inline-block;}
+.streak-fire{font-size:48px;opacity:0.3;}
+.progress-section{background:var(--cream);padding:40px;}
+.ps-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.ps-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:24px;line-height:1;}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.day-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.day-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;position:relative;transition:all 0.2s;}
+.day-circle.done{background:var(--amber);color:var(--white);}
+.day-circle.done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--green);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.today-active{background:var(--green);color:var(--white);box-shadow:0 0 0 3px var(--green-lt);cursor:pointer;}
+.day-circle.today-active:hover{background:var(--green-dk);}
+.day-circle.locked{background:var(--cream-border);color:var(--ink-lt);cursor:not-allowed;}
+.day-circle.today-done{background:var(--green);color:var(--white);}
+.day-circle.today-done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--amber);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.missed{background:var(--cream-border);color:var(--ink-lt);opacity:0.5;}
+.day-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;text-align:center;}
+.day-label.active-label{color:var(--green-dk);font-weight:700;}
+.progress-bar-wrap{margin:20px 0 8px;background:var(--cream-border);height:6px;position:relative;}
+.progress-bar-fill{height:100%;background:var(--amber);transition:width 0.6s ease;}
+.progress-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:right;margin-top:4px;}
+.today-section{background:var(--cream-dk);padding:40px;}
+.ts-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.ts-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
+.ts-status-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.ts-status-dot{width:10px;height:10px;border-radius:50%;}
+.ts-status-dot.green{background:var(--green);}
+.ts-status-dot.amber{background:var(--amber);}
+.ts-status-dot.red{background:#c0392b;}
+.ts-status-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--ink-md);}
+.action-box{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;margin-bottom:20px;}
+.action-box-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
+.action-box-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.2;}
+.mark-btn{width:100%;background:var(--green);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
+.mark-btn:hover{background:var(--green-dk);}
+.already-done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:14px;background:var(--green-lt);}
+
+/* ─── NEXT ACTION HOOK ─── */
+.next-section{background:var(--cream);padding:40px;}
+.next-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
+.next-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:20px;line-height:1;}
+.next-card{border:1px solid var(--cream-border);padding:24px;display:flex;gap:20px;align-items:flex-start;opacity:0.6;}
+.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:60px;flex-shrink:0;}
+.next-day-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--amber);line-height:1;}
+.next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;}
+.next-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.next-body{font-size:13px;color:var(--ink-md);line-height:1.75;}
+.next-lock{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;display:flex;align-items:center;gap:6px;}
+
+/* Completion next-action hook */
+.complete-hook{background:var(--green);padding:32px 40px;}
+.ch-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(228,240,232,0.5);letter-spacing:3px;margin-bottom:12px;}
+.ch-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
+.ch-body{font-size:13px;color:rgba(228,240,232,0.7);line-height:1.7;margin-bottom:20px;max-width:440px;}
+.ch-actions{display:flex;gap:12px;flex-wrap:wrap;}
+.ch-btn-primary{background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
+.ch-btn-primary:hover{background:var(--amber-dk);}
+.ch-btn-secondary{background:transparent;color:var(--green-lt);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:1px solid rgba(228,240,232,0.3);cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:all 0.15s;}
+.ch-btn-secondary:hover{border-color:var(--green-lt);}
+
+.chain-section{background:var(--green);padding:40px;text-align:center;}
+.chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
+.chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(228,240,232,0.5);letter-spacing:2px;}
+.chain-dots{display:flex;justify-content:center;gap:8px;margin:20px 0;}
+.chain-dot{width:12px;height:12px;border-radius:50%;background:rgba(228,240,232,0.2);}
+.chain-dot.filled{background:var(--amber);}
+.chain-dot.missed{background:rgba(192,57,43,0.4);}
+.footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);letter-spacing:4px;}
+.footer-logo em{color:var(--amber);font-style:normal;}
+.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.no-data{padding:80px 40px;text-align:center;}
+.no-data-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:16px;}
+.no-data-p{font-size:14px;color:var(--ink-md);margin-bottom:24px;}
+.no-data-btn{display:inline-block;background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 28px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;text-decoration:none;}
+@media(max-width:768px){
+  .nav{padding:0 18px;}.journey-header{padding:36px 18px 32px;}.jh-h{font-size:52px;}
+  .streak-section{padding:24px 18px;flex-direction:column;align-items:flex-start;gap:12px;}.streak-num{font-size:72px;}.streak-fire{display:none;}
+  .progress-section{padding:28px 18px;}.days-grid{gap:4px;}.day-circle{width:36px;height:36px;font-size:14px;}
+  .today-section{padding:28px 18px;}.next-section{padding:28px 18px;}.chain-section{padding:32px 18px;}
+  .complete-hook{padding:28px 18px;}.ch-actions{flex-direction:column;}
+  .footer{padding:20px 18px;flex-direction:column;gap:10px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-logo">AL<em>P</em>INO</div>
+  </div>
+  <div class="nav-streak"><span class="fire">🔥</span><span id="navStreakText">—</span></div>
+</nav>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
 </body>
 </html>

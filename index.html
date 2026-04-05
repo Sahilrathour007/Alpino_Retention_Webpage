@@ -468,6 +468,9 @@ function goStep3(){
 }
 
 async function markDone(){
+  // ── INDEX.HTML ONLY JOB: Save user signup data, redirect to journey ──
+  // Marking days done happens ONLY on the journey page.
+  // This function does NOT mark Day 1 complete. It just registers the user.
   const saveError = document.getElementById('saveError');
   saveError.style.display = 'none';
   const email = normalizeEmail(capturedEmail);
@@ -480,30 +483,15 @@ async function markDone(){
   localStorage.setItem('alpino_user_email', email);
 
   try {
-    const { data: existing, error: selectError } = await _supabase
+    // Check if user already exists
+    const { data: existing } = await _supabase
       .from('users')
-      .select('email,current_day,streak_count,signup_tracked')
+      .select('email')
       .eq('email', email)
       .maybeSingle();
 
-    if (selectError && selectError.code !== 'PGRST116') {
-      throw selectError;
-    }
-
-    const nowISO = new Date().toISOString();
-
-    if (existing) {
-      const { error: updateError } = await _supabase
-        .from('users')
-        .update({
-          goal: selectedGoal,
-          lifestyle: selectedLifestyle,
-          signup_tracked: true
-        })
-        .eq('email', email);
-
-      if (updateError) throw updateError;
-    } else {
+    if (!existing) {
+      // New user — insert with current_day = 1, no completion yet
       const { error: insertError } = await _supabase
         .from('users')
         .insert([{
@@ -511,37 +499,25 @@ async function markDone(){
           goal: selectedGoal,
           lifestyle: selectedLifestyle,
           current_day: 1,
-          last_completed_date: nowISO,
-          streak_count: 1,
+          streak_count: 0,
           signup_tracked: true
         }]);
-
       if (insertError) throw insertError;
+    } else {
+      // Returning user — update goal/lifestyle only
+      await _supabase
+        .from('users')
+        .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
+        .eq('email', email);
     }
 
-    // ── SEND DAY 1 EMAIL via Supabase Edge Function ───────────
-    // Fire-and-forget: don't block the UI if email fails
-    showStep(4); // show success screen immediately
-    try {
-      const emailRes = await fetch('https://shkbxpsxieyuvonfbntf.supabase.co/functions/v1/send-day-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3NjE3MjEsImV4cCI6MjA1OTMzNzcyMX0.p-3RRe7JtzL8OCb_38MmVzBICOzKbf0TNfxgDW7DRXY'
-        },
-        body: JSON.stringify({ email, day: 1 })
-      });
-      const emailData = await emailRes.json();
-      console.log('Email result:', JSON.stringify(emailData));
-    } catch (err) {
-      console.warn('Email send error:', err);
-    }
-    // ─────────────────────────────────────────────────────────
-
+    // Show step 4 and redirect — journey page handles everything from here
+    showStep(4);
     startRedirectCountdown();
+
   } catch (err) {
     console.error(err);
-    saveError.textContent = 'Something went wrong saving your progress. Please check your Supabase table / policies and try again.';
+    saveError.textContent = 'Something went wrong. Please try again.';
     saveError.style.display = 'block';
   }
 }

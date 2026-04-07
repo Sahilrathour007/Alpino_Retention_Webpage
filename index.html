@@ -223,7 +223,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
     <div class="step" style="position:relative;">
       <div class="step-num">01</div><div class="step-label">Right now</div>
       <div class="step-title">Enter your email</div>
-      <div class="step-body">Answer 2 quick questions. We personalise your plan instantly — by goal and lifestyle, nothing more.</div>
+      <div class="step-body">Answer 3 quick questions. We personalise your plan instantly — by goal, lifestyle, and diet preference.</div>
       <div class="step-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="square"/></svg></div>
     </div>
     <div class="step" style="position:relative;">
@@ -288,24 +288,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
     <div class="form-step" id="step2">
       <div class="modal-header">
         <div class="modal-header-tag">// Almost there</div>
-        <div class="modal-header-h">TWO<br><span>QUICK</span><br>QUESTIONS.</div>
+        <div class="modal-header-h">THREE<br><span>QUICK</span><br>QUESTIONS.</div>
       </div>
       <div class="modal-body">
         <div class="step-dots"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div>
         <div class="field-group">
           <label class="field-label">Your main goal</label>
           <div class="choice-grid">
-            <button class="choice-btn" onclick="selectChoice(this,'goal')">Lose weight</button>
-            <button class="choice-btn" onclick="selectChoice(this,'goal')">Gain muscle</button>
-            <button class="choice-btn" onclick="selectChoice(this,'goal')">Stay healthy</button>
-            <button class="choice-btn" onclick="selectChoice(this,'goal')">Just try it</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')" data-value="weight_loss">Lose weight</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')" data-value="muscle_gain">Gain muscle</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')" data-value="general_health">Stay healthy</button>
+            <button class="choice-btn" onclick="selectChoice(this,'goal')" data-value="energy">Just try it</button>
           </div>
         </div>
         <div class="field-group">
           <label class="field-label">Your lifestyle</label>
           <div class="choice-grid">
-            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')">Student</button>
-            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')">Working</button>
+            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')" data-value="sedentary">Sedentary</button>
+            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')" data-value="active">Active</button>
+            <button class="choice-btn" onclick="selectChoice(this,'lifestyle')" data-value="athlete">Athlete</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Your diet preference</label>
+          <div class="choice-grid">
+            <button class="choice-btn" onclick="selectChoice(this,'diet_pref')" data-value="veg">Vegetarian</button>
+            <button class="choice-btn" onclick="selectChoice(this,'diet_pref')" data-value="non_veg">Non-Vegetarian</button>
+            <button class="choice-btn" onclick="selectChoice(this,'diet_pref')" data-value="vegan">Vegan</button>
           </div>
         </div>
         <div class="error-msg" id="choiceError" style="display:none;">Please select one option from each group.</div>
@@ -324,7 +333,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
         <div class="confirm-summary">
           <div>📧 <strong id="confirmEmail">—</strong></div>
           <div>🎯 Goal: <strong id="confirmGoal">—</strong></div>
-          <div>🏷 Lifestyle: <strong id="confirmLifestyle">—</strong></div>
+          <div>🏃 Lifestyle: <strong id="confirmLifestyle">—</strong></div>
+          <div>🥗 Diet: <strong id="confirmDietPref">—</strong></div>
         </div>
         <div style="margin-bottom:20px;text-align:left;">
           <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:2px;margin-bottom:8px;">// Your 7-day streak starts now</div>
@@ -367,24 +377,29 @@ const _supabase = window.supabase.createClient(
 
 let selectedGoal = '';
 let selectedLifestyle = '';
+let selectedDietPref = '';
 let capturedEmail = '';
 
 const day1Actions = {
-  'Lose weight': {
-    'Student':  { label: '// Skip the canteen biscuit today', text: 'SWAP YOUR MORNING BISCUIT FOR 1 SPOON OF PEANUT BUTTER ON TOAST. THAT\'S YOUR ONLY CHANGE TODAY.' },
-    'Working':  { label: '// Desk-friendly breakfast upgrade', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. SKIP THE BISCUIT WITH YOUR CHAI.' }
+  'weight_loss': {
+    'sedentary': { label: '// Skip the snack today', text: 'SWAP YOUR MORNING BISCUIT FOR 1 SPOON OF PEANUT BUTTER ON TOAST. THAT\'S YOUR ONLY CHANGE TODAY.' },
+    'active':    { label: '// Fuel your activity right', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. SKIP THE BISCUIT WITH YOUR CHAI.' },
+    'athlete':   { label: '// Pre-workout protein swap', text: 'REPLACE ONE HIGH-CARB SNACK WITH 1 SPOON OF PEANUT BUTTER BEFORE YOUR WORKOUT TODAY.' }
   },
-  'Gain muscle': {
-    'Student':  { label: '// Pre-class protein hit', text: 'ADD 2 SPOONS OF PEANUT BUTTER TO YOUR BREAKFAST BEFORE YOU LEAVE. ROTI, TOAST, OR SPOON — JUST EAT IT.' },
-    'Working':  { label: '// Before your commute', text: 'HAVE 2 SPOONS OF PEANUT BUTTER WITH BREAKFAST BEFORE LEAVING HOME. PROTEIN FIRST, EVERYTHING ELSE AFTER.' }
+  'muscle_gain': {
+    'sedentary': { label: '// Start building from scratch', text: 'ADD 2 SPOONS OF PEANUT BUTTER TO YOUR BREAKFAST. ROTI, TOAST, OR SPOON — JUST EAT IT.' },
+    'active':    { label: '// Before your session', text: 'HAVE 2 SPOONS OF PEANUT BUTTER WITH BREAKFAST BEFORE ANY PHYSICAL ACTIVITY. PROTEIN FIRST.' },
+    'athlete':   { label: '// Athlete fuel, day one', text: 'ADD 3 SPOONS OF PEANUT BUTTER TO YOUR BREAKFAST. EAT IT 30 MINUTES BEFORE TRAINING.' }
   },
-  'Stay healthy': {
-    'Student':  { label: '// One swap, whole day impact', text: 'REPLACE ONE SNACK TODAY — ANY SNACK — WITH 1 SPOON OF PEANUT BUTTER ON TOAST OR A BANANA.' },
-    'Working':  { label: '// Lunchbox upgrade', text: 'ADD 1 SPOON OF PEANUT BUTTER SOMEWHERE IN YOUR LUNCH TODAY. ROTI, TOAST, OR MID-MORNING — YOUR CALL.' }
+  'general_health': {
+    'sedentary': { label: '// One swap, whole day impact', text: 'REPLACE ONE SNACK TODAY WITH 1 SPOON OF PEANUT BUTTER ON TOAST OR A BANANA.' },
+    'active':    { label: '// Lunchbox upgrade', text: 'ADD 1 SPOON OF PEANUT BUTTER SOMEWHERE IN YOUR LUNCH TODAY. ROTI, TOAST, OR MID-MORNING — YOUR CALL.' },
+    'athlete':   { label: '// Recovery nutrition', text: 'ADD 2 SPOONS OF PEANUT BUTTER TO YOUR POST-WORKOUT MEAL. START THE RECOVERY HABIT TODAY.' }
   },
-  'Just try it': {
-    'Student':  { label: '// Easiest first step', text: 'ADD 1 SPOON OF PEANUT BUTTER TO WHATEVER YOU EAT FOR BREAKFAST. THAT\'S THE WHOLE TASK.' },
-    'Working':  { label: '// Two minutes. That\'s all.', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. EAT IT WITH ROTI, TOAST, OR A BANANA.' }
+  'energy': {
+    'sedentary': { label: '// Easiest first step', text: 'ADD 1 SPOON OF PEANUT BUTTER TO WHATEVER YOU EAT FOR BREAKFAST. THAT\'S THE WHOLE TASK.' },
+    'active':    { label: '// Two minutes. That\'s all.', text: 'ADD 1 SPOON OF PEANUT BUTTER TO YOUR MORNING MEAL. EAT IT WITH ROTI, TOAST, OR A BANANA.' },
+    'athlete':   { label: '// Sustained energy boost', text: 'ADD 2 SPOONS OF PEANUT BUTTER TO BREAKFAST AND 1 SPOON AS A MID-DAY SNACK FOR ALL-DAY FUEL.' }
   }
 };
 
@@ -442,20 +457,27 @@ function goStep2(){
 function selectChoice(btn, group){
   btn.closest('.choice-grid').querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  if (group === 'goal') selectedGoal = btn.textContent.trim();
-  if (group === 'lifestyle') selectedLifestyle = btn.textContent.trim();
+  const val = btn.dataset.value || btn.textContent.trim();
+  if (group === 'goal') selectedGoal = val;
+  if (group === 'lifestyle') selectedLifestyle = val;
+  if (group === 'diet_pref') selectedDietPref = val;
 }
 
 function goStep3(){
   const errEl = document.getElementById('choiceError');
-  if (!selectedGoal || !selectedLifestyle) {
+  if (!selectedGoal || !selectedLifestyle || !selectedDietPref) {
     errEl.style.display = 'block';
+    errEl.textContent = 'Please select one option from each group.';
     return;
   }
   errEl.style.display = 'none';
+  const goalLabels = { weight_loss: 'Lose weight', muscle_gain: 'Gain muscle', general_health: 'Stay healthy', energy: 'Just try it' };
+  const lifestyleLabels = { sedentary: 'Sedentary', active: 'Active', athlete: 'Athlete' };
+  const dietLabels = { veg: 'Vegetarian', non_veg: 'Non-Vegetarian', vegan: 'Vegan' };
   document.getElementById('confirmEmail').textContent = capturedEmail;
-  document.getElementById('confirmGoal').textContent = selectedGoal;
-  document.getElementById('confirmLifestyle').textContent = selectedLifestyle;
+  document.getElementById('confirmGoal').textContent = goalLabels[selectedGoal] || selectedGoal;
+  document.getElementById('confirmLifestyle').textContent = lifestyleLabels[selectedLifestyle] || selectedLifestyle;
+  document.getElementById('confirmDietPref').textContent = dietLabels[selectedDietPref] || selectedDietPref;
   showStep(3);
 }
 
@@ -491,6 +513,7 @@ async function markDone(){
           email,
           goal:            selectedGoal,
           lifestyle:       selectedLifestyle,
+          diet_pref:       selectedDietPref,
           current_day:     1,
           streak_count:    0,
           signup_tracked:  true
@@ -500,7 +523,7 @@ async function markDone(){
     } else {
       await _supabase
         .from('users')
-        .update({ goal: selectedGoal, lifestyle: selectedLifestyle })
+        .update({ goal: selectedGoal, lifestyle: selectedLifestyle, diet_pref: selectedDietPref })
         .eq('email', email);
     }
 

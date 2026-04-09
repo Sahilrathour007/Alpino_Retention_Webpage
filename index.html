@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Alpino · Start Day 1</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase SDK removed: data now flows through Render backend /signup endpoint -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -370,10 +370,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 </div>
 
 <script>
-const _supabase = window.supabase.createClient(
-  'https://shkbxpsxieyuvonfbntf.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ'
-);
+// Data flows through https://wholetruth.onrender.com/signup — no direct Supabase access needed here.
 
 let selectedGoal = '';
 let selectedLifestyle = '';
@@ -482,14 +479,20 @@ function goStep3(){
 }
 
 async function markDone(){
-  // INDEX ONLY JOB: Save email + goal + lifestyle to users table.
-  // NEVER marks Day 1 complete. NEVER writes to events table.
-  // Journey page is the ONLY place where marking done happens.
+  // Sends email + goal + lifestyle + diet_pref to Render backend /signup
+  // Server handles Supabase write, habit plan generation, and Day 1 email via Resend
+  const BACKEND_URL = 'https://wholetruth.onrender.com';
+
   const saveError = document.getElementById('saveError');
   saveError.style.display = 'none';
   const email = normalizeEmail(capturedEmail);
   if (!emailOk(email)) {
     saveError.textContent = 'Missing email. Go back and enter it again.';
+    saveError.style.display = 'block';
+    return;
+  }
+  if (!selectedGoal || !selectedLifestyle || !selectedDietPref) {
+    saveError.textContent = 'Missing selections. Please go back and complete all fields.';
     saveError.style.display = 'block';
     return;
   }
@@ -499,39 +502,40 @@ async function markDone(){
   const btn = document.querySelector('#step3 .form-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
-  try {
-    const { data: existing } = await _supabase
-      .from('users')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle();
+  // Map frontend goal values to what server.js /signup expects
+  const goalMap = {
+    weight_loss:    'lose_weight',
+    muscle_gain:    'gain_muscle',
+    general_health: 'general_health',
+    energy:         'energy',
+  };
 
-    if (!existing) {
-      const { error: insertError } = await _supabase
-        .from('users')
-        .insert([{
-          email,
-          goal:            selectedGoal,
-          lifestyle:       selectedLifestyle,
-          diet_pref:       selectedDietPref,
-          current_day:     1,
-          streak_count:    0,
-          signup_tracked:  true
-          // NO last_completed_date — they have not done anything yet
-        }]);
-      if (insertError) throw insertError;
+  const payload = {
+    email,
+    goal:      goalMap[selectedGoal] || selectedGoal,
+    lifestyle: selectedLifestyle,   // sedentary | active | athlete — exact match
+    diet_pref: selectedDietPref,    // veg | non_veg | vegan — exact match
+  };
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/signup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    // Render free tier can be cold — 50s+ delay. Give it time.
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showStep(4);
+      startRedirectCountdown();
     } else {
-      await _supabase
-        .from('users')
-        .update({ goal: selectedGoal, lifestyle: selectedLifestyle, diet_pref: selectedDietPref })
-        .eq('email', email);
+      throw new Error(data.message || 'Server rejected the request.');
     }
 
-    showStep(4);
-    startRedirectCountdown();
-
   } catch (err) {
-    console.error(err);
+    console.error('[SIGNUP ERROR]', err);
     saveError.textContent = 'Something went wrong. Please try again.';
     saveError.style.display = 'block';
     if (btn) { btn.disabled = false; btn.textContent = 'Save my plan and go to my journey →'; }

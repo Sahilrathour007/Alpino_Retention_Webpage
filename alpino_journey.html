@@ -171,16 +171,22 @@ function getProgress() {
 
 function isDoneToday() {
   if (!_user || !_user.last_completed_date) return false;
-  return new Date(_user.last_completed_date).toDateString() === new Date().toDateString();
+  // last_completed_date is a date column (YYYY-MM-DD) — compare as date string
+  const lastDate = new Date(_user.last_completed_date);
+  const today    = new Date();
+  return lastDate.getFullYear() === today.getFullYear()
+      && lastDate.getMonth()    === today.getMonth()
+      && lastDate.getDate()     === today.getDate();
 }
 
 function calcStreak() {
   if (!_user || !_user.last_completed_date) return 0;
-  const last = new Date(_user.last_completed_date);
-  const lastCal = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
-  const now = new Date();
+  const last     = new Date(_user.last_completed_date);
+  const lastCal  = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+  const now      = new Date();
   const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const diff = Math.round((todayCal - lastCal) / 86400000);
+  const diff     = Math.round((todayCal - lastCal) / 86400000);
+  // diff=0 → completed today, diff=1 → completed yesterday — streak alive
   return diff <= 1 ? (_user.streak_count || 1) : 0;
 }
 
@@ -224,16 +230,13 @@ async function markTodayDone() {
     const streakWasBroken = calcStreak() === 0 && _completedDays.length > 0;
     const newStreakCount = streakWasBroken ? 1 : (_user.streak_count || 0) + 1;
 
-    // WRITE 1: events table — source of truth
+    // WRITE 1: events table — source of truth (server.js schema)
     const insertResult = await _supabase
       .from('events')
       .insert([{
-        email:      _user.email,
-        event:      'day_complete',
-        day:        dayToMark,
-        completed:  true,
-        metadata:   { goal: _user.goal, lifestyle: _user.lifestyle },
-        created_at: nowISO
+        user_id:    _user.id,
+        event_type: 'day_complete',
+        metadata:   { day: dayToMark, goal: _user.goal, lifestyle: _user.lifestyle, completed: true }
       }]);
 
     if (insertResult.error) {
@@ -242,28 +245,22 @@ async function markTodayDone() {
       return;
     }
 
-    // WRITE 2: users table — cache only, not truth
+    // WRITE 2: user_state — streak + progress live here
     await _supabase
-      .from('users')
+      .from('user_state')
       .update({
-        last_completed_date: nowISO,
-        streak_count:        newStreakCount,
+        current_streak:      newStreakCount,
         last_completed_day:  dayToMark,
-        current_day:         Math.min(dayToMark + 1, 7)
+        last_completed_date: nowISO,
+        last_active_at:      nowISO,
       })
-      .eq('email', _user.email);
+      .eq('user_id', _user.id);
 
     // Update local state to match what we just wrote
     _completedDays.push(dayToMark);
     _user.last_completed_date = nowISO;
     _user.streak_count = newStreakCount;
-
-    // Fire email — non-blocking, never affects UI flow
-    fetch(SUPABASE_URL + '/functions/v1/send-day-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ANON_KEY },
-      body: JSON.stringify({ email: _user.email, day: dayToMark })
-    }).catch(function(e) { console.warn('Email non-blocking:', e); });
+    // Daily emails sent by server.js cron — no edge function needed
 
     renderApp();
     showToast(streakWasBroken
@@ -279,10 +276,10 @@ async function markTodayDone() {
 async function loadApp() {
   if (!_emailParam) { renderApp(); return; }
 
-  // Load user metadata
+  // STEP 1: Get user id + email from users table
   const userResult = await _supabase
     .from('users')
-    .select('email, goal, lifestyle, streak_count, last_completed_date, last_completed_day, current_day')
+    .select('id, email, name')
     .eq('email', _emailParam)
     .maybeSingle();
 
@@ -291,22 +288,51 @@ async function loadApp() {
     renderApp();
     return;
   }
-  _user = userResult.data;
+  const userBase = userResult.data;
 
-  // Load completed days from events — THIS IS THE TRUTH
+  // STEP 2: Get goal + lifestyle from user_intent table
+  const intentResult = await _supabase
+    .from('user_intent')
+    .select('goal, lifestyle, diet_pref')
+    .eq('user_id', userBase.id)
+    .maybeSingle();
+
+  // STEP 3: Get streak + progress from user_state table
+  const stateResult = await _supabase
+    .from('user_state')
+    .select('current_streak, longest_streak, last_completed_day, last_completed_date')
+    .eq('user_id', userBase.id)
+    .maybeSingle();
+
+  // Merge all into _user — single flat object the rest of the code uses
+  _user = {
+    id:                  userBase.id,
+    email:               userBase.email,
+    name:                userBase.name,
+    goal:                intentResult.data ? intentResult.data.goal       : null,
+    lifestyle:           intentResult.data ? intentResult.data.lifestyle  : null,
+    diet_pref:           intentResult.data ? intentResult.data.diet_pref  : null,
+    streak_count:        stateResult.data  ? stateResult.data.current_streak      : 0,
+    last_completed_date: stateResult.data  ? stateResult.data.last_completed_date : null,
+    last_completed_day:  stateResult.data  ? stateResult.data.last_completed_day  : 0,
+    current_day:         stateResult.data  ? (stateResult.data.last_completed_day || 0) + 1 : 1,
+  };
+
+  // STEP 4: Load completed days from events — source of truth
+  // events schema: user_id, event_type, metadata (jsonb with {day, ...})
   const eventsResult = await _supabase
     .from('events')
-    .select('day')
-    .eq('email', _emailParam)
-    .eq('event', 'day_complete')
-    .eq('completed', true);
+    .select('metadata')
+    .eq('user_id', userBase.id)
+    .eq('event_type', 'day_complete');
 
   if (eventsResult.error) {
     console.error('Events fetch error:', eventsResult.error);
   }
 
-  // Deduplicate — if DB somehow has duplicates, UI still correct
-  const rawDays = (eventsResult.data || []).map(function(e) { return e.day; }).filter(Boolean);
+  const rawDays = (eventsResult.data || [])
+    .map(function(e) { return e.metadata && e.metadata.day ? parseInt(e.metadata.day) : null; })
+    .filter(Boolean);
   _completedDays = rawDays.filter(function(d, i) { return rawDays.indexOf(d) === i; });
 
   renderApp();

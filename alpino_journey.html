@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alpino · Your Journey</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -13,29 +13,50 @@
   --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
   --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
   --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
-  --white:#FDFAF5;
+  --white:#FDFAF5;--red:#c0392b;
 }
 html{scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh;}
+
+/* ── NAV ── */
 .nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
 .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
 .nav-logo em{color:var(--amber);font-style:normal;}
 .nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;}
 .nav-streak .fire{font-size:14px;}
+
+/* ── LOADING / ERROR STATES ── */
+.state-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:40px;text-align:center;gap:16px;}
+.state-icon{font-size:48px;}
+.state-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);line-height:1;}
+.state-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink-lt);letter-spacing:2px;max-width:400px;line-height:1.8;}
+.state-btn{display:inline-block;background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 28px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;text-decoration:none;margin-top:8px;}
+.spinner{width:32px;height:32px;border:3px solid var(--cream-border);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── JOURNEY HEADER ── */
 .journey-header{background:var(--ink);padding:48px 40px 40px;position:relative;overflow:hidden;}
 .jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
 .jh-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:12px;}
 .jh-h{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:0.9;letter-spacing:1px;margin-bottom:8px;}
 .jh-h em{color:var(--amber);font-style:normal;}
 .jh-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.4);letter-spacing:2px;}
-.streak-section{background:var(--amber);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
-.streak-main{display:flex;align-items:flex-end;gap:16px;}
-.streak-num{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--ink);line-height:0.85;}
-.streak-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
-.streak-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);line-height:1;letter-spacing:1px;}
-.streak-msg{font-size:13px;color:rgba(28,28,26,0.65);margin-top:6px;max-width:260px;line-height:1.6;}
-.streak-broken{background:var(--ink);color:var(--amber);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-top:8px;display:inline-block;}
-.streak-fire{font-size:48px;opacity:0.3;}
+.jh-name{font-family:'Space Mono',monospace;font-size:11px;color:rgba(253,250,245,0.55);letter-spacing:2px;margin-bottom:10px;}
+
+/* ── STREAK + PROGRESS STAT GRID ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);}
+.stat-cell{background:var(--amber);padding:28px 32px;display:flex;flex-direction:column;gap:4px;}
+.stat-cell.dark{background:var(--ink);}
+.stat-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.45);text-transform:uppercase;}
+.stat-cell.dark .stat-label{color:rgba(253,250,245,0.3);}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:80px;color:var(--ink);line-height:0.85;}
+.stat-cell.dark .stat-num{color:var(--amber);}
+.stat-title{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--ink);letter-spacing:1px;}
+.stat-cell.dark .stat-title{color:var(--white);}
+.stat-msg{font-size:11px;color:rgba(28,28,26,0.6);margin-top:2px;line-height:1.5;}
+.stat-cell.dark .stat-msg{color:rgba(253,250,245,0.4);}
+
+/* ── 7-DAY PROGRESS SECTION ── */
 .progress-section{background:var(--cream);padding:40px;}
 .ps-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
 .ps-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:24px;line-height:1;}
@@ -43,47 +64,71 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .day-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
 .day-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;position:relative;transition:all 0.2s;}
 .day-circle.done{background:var(--amber);color:var(--white);}
-.day-circle.done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--green);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
-.day-circle.today-active{background:var(--green);color:var(--white);box-shadow:0 0 0 3px var(--green-lt);cursor:pointer;}
-.day-circle.today-active:hover{background:var(--green-dk);}
-.day-circle.locked{background:var(--cream-border);color:var(--ink-lt);cursor:not-allowed;}
+.day-circle.done::after{content:'✓';position:absolute;font-size:9px;bottom:-1px;right:-1px;background:var(--green);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.today-active{background:var(--green);color:var(--white);box-shadow:0 0 0 3px var(--green-lt);}
 .day-circle.today-done{background:var(--green);color:var(--white);}
-.day-circle.today-done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--amber);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
-.day-circle.missed{background:var(--cream-border);color:var(--ink-lt);opacity:0.5;}
+.day-circle.today-done::after{content:'✓';position:absolute;font-size:9px;bottom:-1px;right:-1px;background:var(--amber);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.day-circle.locked{background:var(--cream-border);color:var(--ink-lt);}
+.day-circle.missed{background:rgba(192,57,43,0.15);color:var(--red);opacity:0.6;}
 .day-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;text-align:center;}
 .day-label.active-label{color:var(--green-dk);font-weight:700;}
+.day-label.done-label{color:var(--amber);}
 .progress-bar-wrap{margin:20px 0 8px;background:var(--cream-border);height:6px;position:relative;}
 .progress-bar-fill{height:100%;background:var(--amber);transition:width 0.6s ease;}
 .progress-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:right;margin-top:4px;}
+
+/* ── TODAY'S TASK SECTION ── */
 .today-section{background:var(--cream-dk);padding:40px;}
 .ts-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
 .ts-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
 .ts-status-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.ts-status-dot{width:10px;height:10px;border-radius:50%;}
+.ts-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .ts-status-dot.green{background:var(--green);}
 .ts-status-dot.amber{background:var(--amber);}
-.ts-status-dot.red{background:#c0392b;}
+.ts-status-dot.red{background:var(--red);}
 .ts-status-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--ink-md);}
-.action-box{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;margin-bottom:20px;}
-.action-box-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
-.action-box-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.2;}
-.mark-btn{width:100%;background:var(--green);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
-.mark-btn:hover{background:var(--green-dk);}
-.already-done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:14px;background:var(--green-lt);}
 
-/* ─── NEXT ACTION HOOK ─── */
+/* Task type badge */
+.task-type-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;font-weight:700;border-left:3px solid;}
+.task-type-badge.easy{background:rgba(42,100,64,0.08);border-color:var(--green);color:var(--green-dk);}
+.task-type-badge.push{background:rgba(196,122,58,0.1);border-color:var(--amber);color:var(--amber-dk);}
+.task-type-badge.push_high{background:rgba(196,122,58,0.15);border-color:var(--amber-dk);color:var(--amber-dk);}
+.task-type-badge.recovery{background:rgba(74,158,255,0.1);border-color:#4A9EFF;color:#1a5fa8;}
+.task-type-badge.reflection{background:rgba(124,111,205,0.1);border-color:#7C6FCD;color:#5a4fa0;}
+.task-type-badge.comeback{background:rgba(233,196,106,0.15);border-color:#E9C46A;color:#8a6a10;}
+
+/* Task description */
+.task-desc-box{background:var(--ink);padding:20px 22px;margin-bottom:20px;border-left:4px solid var(--amber);}
+.task-desc-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:10px;}
+.task-desc-text{font-size:14px;color:rgba(253,250,245,0.88);line-height:1.85;white-space:pre-line;}
+
+/* Mark done button */
+.mark-btn{width:100%;background:var(--green);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:18px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.mark-btn:hover:not(:disabled){background:var(--green-dk);}
+.mark-btn:disabled{opacity:0.7;cursor:not-allowed;}
+.mark-btn .btn-icon{font-size:16px;}
+
+/* Already done message */
+.done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:18px;background:var(--green-lt);border:1px solid rgba(42,100,64,0.2);}
+
+/* Missed / no task states */
+.missed-msg{text-align:center;padding:20px;background:rgba(192,57,43,0.06);border-left:3px solid var(--red);}
+.missed-msg p{font-size:13px;color:var(--ink-md);line-height:1.7;}
+.missed-msg strong{color:var(--red);}
+
+/* ── NEXT DAY PREVIEW ── */
 .next-section{background:var(--cream);padding:40px;}
 .next-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
-.next-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:20px;line-height:1;}
-.next-card{border:1px solid var(--cream-border);padding:24px;display:flex;gap:20px;align-items:flex-start;opacity:0.6;}
-.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:60px;flex-shrink:0;}
-.next-day-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--amber);line-height:1;}
-.next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;}
-.next-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;}
-.next-body{font-size:13px;color:var(--ink-md);line-height:1.75;}
-.next-lock{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;display:flex;align-items:center;gap:6px;}
+.next-h{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);margin-bottom:16px;line-height:1;}
+.next-card{border:1px solid var(--cream-border);padding:20px 24px;display:flex;gap:18px;align-items:flex-start;opacity:0.65;}
+.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:56px;flex-shrink:0;}
+.next-day-num{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amber);line-height:1;}
+.next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px;}
+.next-info{}
+.next-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.next-lock{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:8px;display:flex;align-items:center;gap:6px;}
 
-/* Completion next-action hook */
+/* ── COMPLETE HOOK ── */
 .complete-hook{background:var(--green);padding:32px 40px;}
 .ch-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(228,240,232,0.5);letter-spacing:3px;margin-bottom:12px;}
 .ch-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
@@ -94,495 +139,539 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .ch-btn-secondary{background:transparent;color:var(--green-lt);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:1px solid rgba(228,240,232,0.3);cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:all 0.15s;}
 .ch-btn-secondary:hover{border-color:var(--green-lt);}
 
+/* ── CHAIN SECTION ── */
 .chain-section{background:var(--green);padding:40px;text-align:center;}
 .chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
 .chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(228,240,232,0.5);letter-spacing:2px;}
 .chain-dots{display:flex;justify-content:center;gap:8px;margin:20px 0;}
-.chain-dot{width:12px;height:12px;border-radius:50%;background:rgba(228,240,232,0.2);}
+.chain-dot{width:14px;height:14px;border-radius:50%;background:rgba(228,240,232,0.2);transition:background 0.3s;}
 .chain-dot.filled{background:var(--amber);}
-.chain-dot.missed{background:rgba(192,57,43,0.4);}
+.chain-dot.missed{background:rgba(192,57,43,0.45);}
+
+/* ── FOOTER ── */
 .footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
 .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);letter-spacing:4px;}
 .footer-logo em{color:var(--amber);font-style:normal;}
 .footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.no-data{padding:80px 40px;text-align:center;}
-.no-data-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:16px;}
-.no-data-p{font-size:14px;color:var(--ink-md);margin-bottom:24px;}
-.no-data-btn{display:inline-block;background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 28px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;text-decoration:none;}
+.toast.error{background:var(--red);}
+
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .nav{padding:0 18px;}.journey-header{padding:36px 18px 32px;}.jh-h{font-size:52px;}
-  .streak-section{padding:24px 18px;flex-direction:column;align-items:flex-start;gap:12px;}.streak-num{font-size:72px;}.streak-fire{display:none;}
-  .progress-section{padding:28px 18px;}.days-grid{gap:4px;}.day-circle{width:36px;height:36px;font-size:14px;}
-  .today-section{padding:28px 18px;}.next-section{padding:28px 18px;}.chain-section{padding:32px 18px;}
-  .complete-hook{padding:28px 18px;}.ch-actions{flex-direction:column;}
+  .nav{padding:0 18px;}
+  .journey-header{padding:36px 18px 32px;}.jh-h{font-size:52px;}
+  .stats-grid{grid-template-columns:1fr;}
+  .stat-cell{padding:20px 18px;}.stat-num{font-size:60px;}
+  .progress-section,.today-section,.next-section,.complete-hook,.chain-section{padding:28px 18px;}
+  .days-grid{gap:4px;}.day-circle{width:36px;height:36px;font-size:14px;}
   .footer{padding:20px 18px;flex-direction:column;gap:10px;text-align:center;}
+  .ch-actions{flex-direction:column;}
 }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="nav-logo">AL<em>P</em>INO</div>
-  </div>
+  <div class="nav-logo">AL<em>P</em>INO</div>
   <div class="nav-streak"><span class="fire">🔥</span><span id="navStreakText">—</span></div>
 </nav>
 
-<div id="app"></div>
+<div id="app">
+  <div class="state-screen">
+    <div class="spinner"></div>
+    <div class="state-sub">Loading your journey...</div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ALPINO JOURNEY — EVENTS AS SINGLE SOURCE OF TRUTH
-// Architecture:
-//   events table   = ONLY source of truth for completed days
-//   users table    = metadata only (email, goal, lifestyle, streak cache)
-//   _completedDays = array loaded from events, all logic derived from this
-//   UI             = computed, never from users.current_day
-//   email          = output only, never updates DB
+// ================================================================
+// ALPINO JOURNEY PAGE v4
+// Auth: token-based (t= URL param from email link)
+// Data: Supabase direct query using anon key
+// Completion: POST to server /complete-task endpoint
+// Immutability: completed days are locked in UI and blocked server-side
+// ================================================================
 
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ';
-const SUPABASE_URL = 'https://shkbxpsxieyuvonfbntf.supabase.co';
-const _supabase = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+// ── CONFIG ──────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://shkbxpsxieyuvonfbntf.supabase.co';
+const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2J4cHN4aWV5dXZvbmZibnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTY0OTMsImV4cCI6MjA5MDY3MjQ5M30.zDCDRuHL3zAxsLEPpB4UDRGifN8OsdTZ5YHdTF7XHPQ';
 
+// Server endpoint — your Railway/Render backend
+// Update this if your server URL changes
+const SERVER_BASE   = 'https://your-backend.railway.app';
+
+const _sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 const _urlParams = new URLSearchParams(window.location.search);
-const _emailParam = (_urlParams.get('email') || localStorage.getItem('alpino_user_email') || '').toLowerCase().trim();
+const _token = (_urlParams.get('t') || '').trim();
 
-let _user          = null;
-let _completedDays = [];   // loaded from events — THE ONLY TRUTH
-let _isMarking     = false; // race condition lock
-
-const DAY_CONTENT = {
-  1: { action: "Add 1 spoon of peanut butter to breakfast. Don't skip it.",           tip: "Roti, toast, or straight from the spoon." },
-  2: { action: "Add peanut butter to your mid-morning snack instead of biscuits.",    tip: "One small swap compounds over 7 days." },
-  3: { action: "Have 2 spoons today. Track how full you feel by noon.",               tip: "Protein keeps you fuller longer. Today you'll feel it." },
-  4: { action: "Pair peanut butter with a banana for your afternoon snack.",          tip: "Banana + peanut butter = complete snack, no cooking." },
-  5: { action: "Replace your evening chai biscuit with peanut butter on toast.",      tip: "If chai happens twice a day, do this at both." },
-  6: { action: "Make one full meal protein-focused. Add peanut butter in it.",        tip: "Dal, eggs, peanut butter - all count as protein." },
-  7: { action: "Complete the whole day on plan. You finish the 7-day challenge.",     tip: "After 7 days, this stops feeling like effort." }
+// ── STATE ────────────────────────────────────────────────────────
+let _state = {
+  token:       _token,
+  user:        null,      // { id, name, email }
+  intent:      null,      // { goal, lifestyle, diet_pref }
+  userState:   null,      // { current_streak, longest_streak, last_completed_day, last_completed_date, fatigue_score }
+  tasks:       [],        // all habit_tasks for active plan, sorted by day_number
+  todayTask:   null,      // the task for today
+  token_valid: false,
+  token_used:  false,
+  token_expired: false,
+  isMarking:   false,
 };
 
-// ALL computed from _completedDays — never from users table
-function getProgress() {
-  if (_completedDays.length === 0) return 1;
-  return Math.min(Math.max(..._completedDays) + 1, 7);
-}
+// ── TASK TYPE CONFIG ─────────────────────────────────────────────
+const TASK_TYPE_CFG = {
+  easy:       { emoji: '🌿', label: 'EASY DAY',       cls: 'easy'       },
+  push:       { emoji: '💪', label: 'PUSH DAY',       cls: 'push'       },
+  push_high:  { emoji: '🔥', label: 'PEAK DAY',       cls: 'push_high'  },
+  recovery:   { emoji: '🔄', label: 'RECOVERY DAY',   cls: 'recovery'   },
+  reflection: { emoji: '🏆', label: 'REFLECTION DAY', cls: 'reflection' },
+  comeback:   { emoji: '🔁', label: 'COMEBACK DAY',   cls: 'comeback'   },
+};
 
-function isDoneToday() {
-  if (!_user || !_user.last_completed_date) return false;
-  // last_completed_date is a date column (YYYY-MM-DD) — compare as date string
-  const lastDate = new Date(_user.last_completed_date);
-  const today    = new Date();
-  return lastDate.getFullYear() === today.getFullYear()
-      && lastDate.getMonth()    === today.getMonth()
-      && lastDate.getDate()     === today.getDate();
-}
-
-function calcStreak() {
-  if (!_user || !_user.last_completed_date) return 0;
-  const last     = new Date(_user.last_completed_date);
-  const lastCal  = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
-  const now      = new Date();
-  const todayCal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const diff     = Math.round((todayCal - lastCal) / 86400000);
-  // diff=0 → completed today, diff=1 → completed yesterday — streak alive
-  return diff <= 1 ? (_user.streak_count || 1) : 0;
-}
-
-function showToast(msg) {
+// ── HELPERS ──────────────────────────────────────────────────────
+function showToast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3200);
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast' + (isError ? ' error' : ''); }, 3200);
 }
 
-// THE ONLY PLACE THAT WRITES TO DB
-async function markTodayDone() {
-  if (!_user || _isMarking) return;
-
-  _isMarking = true;
-  const btn = document.querySelector('.mark-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
-  try {
-    const dayToMark = getProgress();
-
-    // Hard block 1: already completed this exact day number
-    if (_completedDays.includes(dayToMark)) {
-      showToast('Already done. Come back tomorrow.');
-      return;
-    }
-
-    // Hard block 2: already marked something today by date
-    if (isDoneToday()) {
-      showToast('Already marked today. Come back tomorrow.');
-      return;
-    }
-
-    // Hard block 3: challenge finished
-    if (_completedDays.length >= 7) {
-      showToast('Challenge complete! All 7 days done.');
-      return;
-    }
-
-    const nowISO = new Date().toISOString();
-    const streakWasBroken = calcStreak() === 0 && _completedDays.length > 0;
-    const newStreakCount = streakWasBroken ? 1 : (_user.streak_count || 0) + 1;
-
-    // WRITE 1: events table — source of truth (server.js schema)
-    const insertResult = await _supabase
-      .from('events')
-      .insert([{
-        user_id:    _user.id,
-        event_type: 'day_complete',
-        metadata:   { day: dayToMark, goal: _user.goal, lifestyle: _user.lifestyle, completed: true }
-      }]);
-
-    if (insertResult.error) {
-      console.error('Event insert failed:', insertResult.error);
-      showToast('Error saving. Try again.');
-      return;
-    }
-
-    // WRITE 2: user_state — streak + progress live here
-    await _supabase
-      .from('user_state')
-      .update({
-        current_streak:      newStreakCount,
-        last_completed_day:  dayToMark,
-        last_completed_date: nowISO,
-        last_active_at:      nowISO,
-      })
-      .eq('user_id', _user.id);
-
-    // Update local state to match what we just wrote
-    _completedDays.push(dayToMark);
-    _user.last_completed_date = nowISO;
-    _user.streak_count = newStreakCount;
-    // Daily emails sent by server.js cron — no edge function needed
-
-    renderApp();
-    showToast(streakWasBroken
-      ? 'Day ' + dayToMark + ' done. Chain restarted.'
-      : 'Day ' + dayToMark + ' done. Do not break the chain.'
-    );
-
-  } finally {
-    _isMarking = false;
-  }
+function getISTDateStr(date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(date || new Date());
 }
 
+function isToday(dateStr) {
+  if (!dateStr) return false;
+  return getISTDateStr(new Date(dateStr)) === getISTDateStr();
+}
+
+function calcStreakLive(userState) {
+  if (!userState || !userState.last_completed_date) return 0;
+  const lastDate = getISTDateStr(new Date(userState.last_completed_date));
+  const today    = getISTDateStr();
+  const yesterday = getISTDateStr(new Date(Date.now() - 86400000));
+  if (lastDate === today || lastDate === yesterday) return userState.current_streak || 0;
+  return 0;
+}
+
+// ── LOAD APP ─────────────────────────────────────────────────────
 async function loadApp() {
-  if (!_emailParam) { renderApp(); return; }
+  // Case 1: No token at all
+  if (!_token) {
+    return renderNoToken();
+  }
 
-  // STEP 1: Get user id + email from users table
-  const userResult = await _supabase
-    .from('users')
-    .select('id, email, name')
-    .eq('email', _emailParam)
+  // Step 1: Validate token against completion_tokens table
+  const { data: tokenRow, error: tokenErr } = await _sb
+    .from('completion_tokens')
+    .select('task_id, user_id, used, expires_at')
+    .eq('token', _token)
     .maybeSingle();
 
-  if (userResult.error || !userResult.data) {
-    console.error('User not found:', userResult.error);
-    renderApp();
-    return;
+  if (tokenErr || !tokenRow) {
+    return renderInvalidToken();
   }
-  const userBase = userResult.data;
 
-  // STEP 2: Get goal + lifestyle from user_intent table
-  const intentResult = await _supabase
+  const now = new Date();
+  _state.token_valid   = true;
+  _state.token_used    = tokenRow.used === true;
+  _state.token_expired = new Date(tokenRow.expires_at) < now;
+
+  const { task_id, user_id } = tokenRow;
+
+  // Step 2: Load user
+  const { data: user } = await _sb
+    .from('users')
+    .select('id, name, email')
+    .eq('id', user_id)
+    .maybeSingle();
+
+  if (!user) return renderInvalidToken();
+  _state.user = user;
+
+  // Step 3: Load user_intent
+  const { data: intent } = await _sb
     .from('user_intent')
     .select('goal, lifestyle, diet_pref')
-    .eq('user_id', userBase.id)
+    .eq('user_id', user_id)
     .maybeSingle();
+  _state.intent = intent || {};
 
-  // STEP 3: Get streak + progress from user_state table
-  const stateResult = await _supabase
+  // Step 4: Load user_state
+  const { data: userState } = await _sb
     .from('user_state')
-    .select('current_streak, longest_streak, last_completed_day, last_completed_date')
-    .eq('user_id', userBase.id)
+    .select('current_streak, longest_streak, last_completed_day, last_completed_date, fatigue_score, active_plan_id')
+    .eq('user_id', user_id)
     .maybeSingle();
+  _state.userState = userState || { current_streak: 0, longest_streak: 0, last_completed_day: 0, fatigue_score: 0 };
 
-  // Merge all into _user — single flat object the rest of the code uses
-  _user = {
-    id:                  userBase.id,
-    email:               userBase.email,
-    name:                userBase.name,
-    goal:                intentResult.data ? intentResult.data.goal       : null,
-    lifestyle:           intentResult.data ? intentResult.data.lifestyle  : null,
-    diet_pref:           intentResult.data ? intentResult.data.diet_pref  : null,
-    streak_count:        stateResult.data  ? stateResult.data.current_streak      : 0,
-    last_completed_date: stateResult.data  ? stateResult.data.last_completed_date : null,
-    last_completed_day:  stateResult.data  ? stateResult.data.last_completed_day  : 0,
-    current_day:         stateResult.data  ? (stateResult.data.last_completed_day || 0) + 1 : 1,
-  };
+  // Step 5: Load all tasks for active plan
+  const planId = userState?.active_plan_id;
+  if (planId) {
+    const { data: tasks } = await _sb
+      .from('habit_tasks')
+      .select('id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
+      .eq('plan_id', planId)
+      .eq('user_id', user_id)
+      .order('day_number', { ascending: true });
 
-  // STEP 4: Load completed days from events — source of truth
-  // events schema: user_id, event_type, metadata (jsonb with {day, ...})
-  const eventsResult = await _supabase
-    .from('events')
-    .select('metadata')
-    .eq('user_id', userBase.id)
-    .eq('event_type', 'day_complete');
-
-  if (eventsResult.error) {
-    console.error('Events fetch error:', eventsResult.error);
+    _state.tasks = tasks || [];
   }
 
-  const rawDays = (eventsResult.data || [])
-    .map(function(e) { return e.metadata && e.metadata.day ? parseInt(e.metadata.day) : null; })
-    .filter(Boolean);
-  _completedDays = rawDays.filter(function(d, i) { return rawDays.indexOf(d) === i; });
+  // Step 6: Identify today's task (the one this token belongs to)
+  const { data: tokenTask } = await _sb
+    .from('habit_tasks')
+    .select('id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
+    .eq('id', task_id)
+    .maybeSingle();
 
-  renderApp();
+  _state.todayTask = tokenTask;
+
+  // Render
+  renderJourney();
 }
 
-function renderApp() {
-  const app = document.getElementById('app');
-  if (!app) return;
+// ── MARK DONE ────────────────────────────────────────────────────
+async function markTaskDone() {
+  if (_state.isMarking) return;
 
-  if (!_user) {
-    app.innerHTML = '<div class="no-data"><div class="no-data-h">No journey found.</div><p class="no-data-p">Start Day 1 first.</p><a class="no-data-btn" href="index.html">Start Day 1</a></div>';
+  // Guard: token already used or expired
+  if (_state.token_used) {
+    showToast('Already marked complete ✅');
+    return;
+  }
+  if (_state.token_expired) {
+    showToast('This link has expired. Check your next email.', true);
+    return;
+  }
+  if (!_state.todayTask || _state.todayTask.status === 'completed') {
+    showToast('Already done for today ✅');
     return;
   }
 
-  const progress     = getProgress();
-  const doneToday    = isDoneToday();
-  const streak       = calcStreak();
-  const allDone      = _completedDays.length >= 7;
-  const streakBroken = !doneToday && streak === 0 && _completedDays.length > 0;
-  const pct          = Math.round((_completedDays.length / 7) * 100);
-  const todayContent = DAY_CONTENT[progress] || DAY_CONTENT[7];
-  const nextProgress = Math.min(progress + 1, 7);
-  const nextContent  = DAY_CONTENT[nextProgress] || DAY_CONTENT[7];
+  _state.isMarking = true;
+  const btn = document.getElementById('markDoneBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div>'; }
 
-  const navStreak = document.getElementById('navStreakText');
-  if (navStreak) navStreak.textContent = streak > 0 ? streak + '-day streak' : 'Streak broken';
+  try {
+    // POST to server /complete-task — server validates token + marks DB
+    const resp = await fetch(SERVER_BASE + '/complete-task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _token }),
+    });
 
-  const streakMsg = ['Start here.', 'Day 1 done. The chain has begun.', "Two days in. Don't break it now.",
-    "Three days. It's becoming real.", "Halfway. Most people quit here. You didn't.",
-    "Five days. This is a habit now.", "One more. You're almost there.", "7 days done. You built a real habit."];
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      // 410 = already marked — treat as success UI-wise
+      if (resp.status === 410) {
+        _state.token_used = true;
+        _state.todayTask.status = 'completed';
+        renderJourney();
+        showToast('Already marked complete ✅');
+        return;
+      }
+      throw new Error(body.message || 'Server error ' + resp.status);
+    }
 
+    const result = await resp.json();
+
+    // Update local state immediately
+    _state.token_used = true;
+    _state.todayTask.status = 'completed';
+    _state.todayTask.completed_at = new Date().toISOString();
+
+    if (_state.userState) {
+      _state.userState.current_streak = result.new_streak || (_state.userState.current_streak + 1);
+      _state.userState.last_completed_day  = _state.todayTask.day_number;
+      _state.userState.last_completed_date = new Date().toISOString();
+    }
+
+    // Update tasks array
+    const idx = _state.tasks.findIndex(t => t.id === _state.todayTask.id);
+    if (idx !== -1) _state.tasks[idx].status = 'completed';
+
+    renderJourney();
+    showToast('Day ' + _state.todayTask.day_number + ' done. Don\'t break the chain.');
+
+  } catch (err) {
+    console.error('[markTaskDone]', err);
+    showToast('Error saving. Try again.', true);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">✅</span> Mark as Done';
+    }
+  } finally {
+    _state.isMarking = false;
+  }
+}
+
+// ── RENDER: STATES ───────────────────────────────────────────────
+function renderNoToken() {
+  document.getElementById('app').innerHTML = `
+    <div class="state-screen">
+      <div class="state-icon">📬</div>
+      <div class="state-h">Check Your Email</div>
+      <div class="state-sub">Open the daily habit email from Alpino and tap the "Mark as Done" button inside it to reach your journey page.</div>
+    </div>
+    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">Your journey, day by day</div></footer>
+  `;
+}
+
+function renderInvalidToken() {
+  document.getElementById('app').innerHTML = `
+    <div class="state-screen">
+      <div class="state-icon">🔗</div>
+      <div class="state-h">Link Not Found</div>
+      <div class="state-sub">This link is invalid or has expired. Check your latest Alpino habit email for a fresh link.</div>
+    </div>
+    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">Your journey, day by day</div></footer>
+  `;
+}
+
+// ── RENDER: MAIN JOURNEY ─────────────────────────────────────────
+function renderJourney() {
+  const { user, intent, userState, tasks, todayTask, token_used, token_expired } = _state;
+  const app = document.getElementById('app');
+
+  const streak      = calcStreakLive(userState);
+  const completedN  = tasks.filter(t => t.status === 'completed').length;
+  const totalDays   = tasks.length || 7;
+  const allDone     = completedN >= totalDays && totalDays > 0;
+  const pct         = Math.round((completedN / totalDays) * 100);
+  const todayDone   = todayTask?.status === 'completed' || token_used;
+  const streakMsg   = ['Start here.', 'Day 1 done. The chain has begun.', "Two days. Don't break it.",
+    "Three days. It's becoming real.", "Halfway. You're still here.", "Five days. This is a habit.",
+    "One more day left.", "7 days done. You built this."];
+  const firstName   = user?.name ? user.name.split(' ')[0] : '';
+
+  // Nav streak
+  const navEl = document.getElementById('navStreakText');
+  if (navEl) navEl.textContent = streak > 0 ? streak + '-day streak' : (completedN > 0 ? 'Keep going' : 'Day 1');
+
+  // ── DAY CIRCLES ──
   let dayCirclesHTML = '';
-  for (let d = 1; d <= 7; d++) {
-    const done    = _completedDays.includes(d);
-    // A day is "today-active" only if it's the current progress day AND
-    // the user has NOT already completed something today (doneToday).
-    // If they completed today, the next day is locked until tomorrow.
-    const isToday = d === progress && !allDone && !doneToday;
-    let cls = done ? 'done' : isToday ? 'today-active' : 'locked';
-    if (done && doneToday && d === progress - 1) cls = 'today-done'; // last completed = today
-    dayCirclesHTML += '<div class="day-block"><div class="day-circle ' + cls + '">' +
-      (isToday && !done ? '&#9654;' : d) + '</div>' +
-      '<div class="day-label ' + (isToday ? 'active-label' : '') + '">' +
-      (isToday ? 'TODAY' : 'DAY ' + d) + '</div></div>';
+  for (let d = 1; d <= totalDays; d++) {
+    const task   = tasks.find(t => t.day_number === d);
+    const status = task ? task.status : 'locked';
+    const isTodays = task && todayTask && task.id === todayTask.id;
+
+    let cls, label;
+    if (status === 'completed') {
+      cls   = isTodays ? 'today-done' : 'done';
+      label = `<div class="day-label done-label">DAY ${d}</div>`;
+    } else if (status === 'missed') {
+      cls   = 'missed';
+      label = `<div class="day-label">MISSED</div>`;
+    } else if (isTodays && !todayDone) {
+      cls   = 'today-active';
+      label = `<div class="day-label active-label">TODAY</div>`;
+    } else if (isTodays && todayDone) {
+      cls   = 'today-done';
+      label = `<div class="day-label done-label">TODAY</div>`;
+    } else {
+      cls   = 'locked';
+      label = `<div class="day-label">DAY ${d}</div>`;
+    }
+
+    dayCirclesHTML += `
+      <div class="day-block">
+        <div class="day-circle ${cls}">${d}</div>
+        ${label}
+      </div>`;
   }
 
+  // ── CHAIN DOTS ──
   let chainDots = '';
-  for (let i = 1; i <= 7; i++) {
-    chainDots += '<div class="chain-dot ' + (_completedDays.includes(i) ? 'filled' : '') + '"></div>';
+  for (let d = 1; d <= totalDays; d++) {
+    const task = tasks.find(t => t.day_number === d);
+    const dotCls = task?.status === 'completed' ? 'filled' : task?.status === 'missed' ? 'missed' : '';
+    chainDots += `<div class="chain-dot ${dotCls}"></div>`;
   }
 
-  const reEngageHTML = streakBroken
-    ? '<div style="background:var(--ink);border-left:4px solid #c0392b;padding:18px 20px;margin-bottom:16px;">' +
-      '<div style="font-family:\'Space Mono\',monospace;font-size:8px;color:#c0392b;letter-spacing:2px;margin-bottom:8px;">// Streak broken</div>' +
-      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--white);line-height:1.2;">DO TODAY\'S ACTION. RESTART THE CHAIN.</div>' +
-      '<div style="font-size:12px;color:rgba(253,250,245,0.5);margin-top:10px;">Progress saved. Come back today.</div></div>'
-    : '';
+  // ── TODAY'S TASK CARD ──
+  let todayCardHTML = '';
+  if (!todayTask) {
+    todayCardHTML = `
+      <div class="ts-status-row">
+        <div class="ts-status-dot amber"></div>
+        <div class="ts-status-text">NO TASK FOUND FOR TODAY</div>
+      </div>
+      <div class="missed-msg"><p>Your next task email will arrive tomorrow morning. Check back then.</p></div>`;
+  } else {
+    const taskCfg   = TASK_TYPE_CFG[todayTask.task_type] || TASK_TYPE_CFG['easy'];
+    const statusDot = todayDone ? 'green' : 'amber';
+    const statusTxt = todayDone
+      ? `DAY ${todayTask.day_number} COMPLETE`
+      : `DAY ${todayTask.day_number} — WAITING FOR YOU`;
 
-  const markBtnHTML = '<button class="mark-btn" onclick="markTodayDone()">' +
-    (streakBroken ? 'Restart - Day ' + progress + ' done' : 'Mark Day ' + progress + ' done') + '</button>';
+    const taskDesc  = todayTask.description || 'Complete today\'s habit task.';
 
-  const actionHTML = (doneToday || allDone)
-    ? '<div class="already-done-msg">Day ' + (allDone ? 7 : progress - 1) + ' done. Come back tomorrow - do not break the chain.</div>'
-    : reEngageHTML +
-      '<div class="action-box"><div class="action-box-label">// Day ' + progress + ' - do this today</div>' +
-      '<div class="action-box-text">' + todayContent.action + '</div></div>' + markBtnHTML;
+    const actionHTML = todayDone
+      ? `<div class="done-msg">✓ Day ${todayTask.day_number} marked complete. Come back tomorrow — don't break the chain.</div>`
+      : (token_expired
+          ? `<div class="missed-msg"><p><strong>This link has expired.</strong> Your next habit email will arrive tomorrow morning.</p></div>`
+          : `<button class="mark-btn" id="markDoneBtn" onclick="markTaskDone()">
+               <span class="btn-icon">✅</span> Mark as Done
+             </button>
+             <p style="font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:center;margin-top:10px;">Tap when you complete today's habit. Takes 2 seconds.</p>`
+        );
 
-  const nextSection = (doneToday || allDone) ? (allDone
-    ? '<div class="complete-hook"><div class="ch-tag">// 7-day challenge complete</div><div class="ch-h">YOU BUILT<br>A HABIT.</div>' +
-      '<div class="ch-body">7 days of peanut butter. You rewired one small behaviour.</div>' +
-      '<div class="ch-actions"><button class="ch-btn-primary" onclick="shareProgress()">Share my achievement</button></div></div>'
-    : '<div class="complete-hook"><div class="ch-tag">// Day ' + (progress - 1) + ' complete</div><div class="ch-h">COME BACK<br>TOMORROW.</div>' +
-      '<div class="ch-body">Day ' + progress + ' unlocks tomorrow. ' + nextContent.tip + '</div>' +
-      '<div class="ch-actions"><button class="ch-btn-secondary" onclick="shareProgress()">Share my streak</button></div></div>'
-  ) : '';
+    todayCardHTML = `
+      <div class="ts-status-row">
+        <div class="ts-status-dot ${statusDot}"></div>
+        <div class="ts-status-text">${statusTxt}</div>
+      </div>
+      <div class="task-type-badge ${taskCfg.cls}">${taskCfg.emoji} ${taskCfg.label}</div>
+      <div class="task-desc-box">
+        <div class="task-desc-label">// Day ${todayTask.day_number} — your task today</div>
+        <div class="task-desc-text">${taskDesc}</div>
+      </div>
+      ${actionHTML}`;
+  }
 
-  app.innerHTML =
-    '<div class="journey-header"><div class="jh-bg">JOURNEY</div>' +
-    '<div class="jh-tag">// Your progress</div>' +
-    '<div class="jh-h">YOU\'RE ON<br><em>DAY ' + progress + '.</em></div>' +
-    '<div class="jh-sub">' + (doneToday || allDone ? 'TODAY DONE - COME BACK TOMORROW' : streakBroken ? 'STREAK BROKEN - PROGRESS SAVED' : 'CONSISTENCY STARTS HERE') + '</div></div>' +
+  // ── NEXT DAY PREVIEW ──
+  let nextSectionHTML = '';
+  if (todayDone && !allDone && todayTask) {
+    const nextTask = tasks.find(t => t.day_number === todayTask.day_number + 1);
+    if (nextTask) {
+      const nextCfg = TASK_TYPE_CFG[nextTask.task_type] || TASK_TYPE_CFG['easy'];
+      nextSectionHTML = `
+        <div class="next-section">
+          <div class="next-tag">// Coming up</div>
+          <div class="next-h">DAY ${nextTask.day_number} PREVIEW</div>
+          <div class="next-card">
+            <div class="next-day-badge">
+              <div class="next-day-num">${nextTask.day_number}</div>
+              <div class="next-day-label">DAY</div>
+            </div>
+            <div class="next-info">
+              <div class="next-title">${nextCfg.emoji} ${nextCfg.label}</div>
+              <div class="next-lock">🔒 Unlocks tomorrow — check your email</div>
+            </div>
+          </div>
+        </div>`;
+    }
+  }
 
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);">' +
-    '<div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;' + (streakBroken ? 'background:var(--ink);' : '') + '">' +
-    '<div style="font-family:\'Space Mono\',monospace;font-size:8px;letter-spacing:2px;color:' + (streakBroken ? 'rgba(253,250,245,0.3)' : 'rgba(28,28,26,0.4)') + ';margin-bottom:4px;">// STREAK</div>' +
-    '<div class="streak-num" style="' + (streakBroken ? 'color:#c0392b;font-size:72px;' : '') + '">' + streak + '</div>' +
-    '<div class="streak-title" style="font-size:14px;' + (streakBroken ? 'color:var(--amber);' : '') + '">' + (streak === 0 ? 'BROKEN' : streak === 1 ? 'DAY IN A ROW' : 'DAYS IN A ROW') + '</div>' +
-    '<div style="font-size:11px;color:' + (streakBroken ? 'rgba(253,250,245,0.4)' : 'var(--ink-md)') + ';margin-top:4px;">' + streakMsg[Math.min(streak, 7)] + '</div></div>' +
+  // ── COMPLETE HOOK (all 7 done) ──
+  let completeHookHTML = '';
+  if (allDone) {
+    completeHookHTML = `
+      <div class="complete-hook">
+        <div class="ch-tag">// 7-day habit built</div>
+        <div class="ch-h">YOU BUILT<br>A HABIT.</div>
+        <div class="ch-body">7 days of intentional nutrition. Most people quit at Day 3. You finished.</div>
+        <div class="ch-actions">
+          <button class="ch-btn-primary" onclick="shareProgress()">Share my achievement</button>
+        </div>
+      </div>`;
+  } else if (todayDone) {
+    completeHookHTML = `
+      <div class="complete-hook" style="background:var(--green-dk);">
+        <div class="ch-tag">// Day ${todayTask ? todayTask.day_number : ''} complete</div>
+        <div class="ch-h">COME BACK<br>TOMORROW.</div>
+        <div class="ch-body">Your next task arrives tomorrow morning. Don't break the chain — ${totalDays - completedN} day${totalDays - completedN !== 1 ? 's' : ''} to go.</div>
+        <div class="ch-actions">
+          <button class="ch-btn-secondary" onclick="shareProgress()">Share my streak</button>
+        </div>
+      </div>`;
+  }
 
-    '<div class="streak-section" style="flex-direction:column;align-items:flex-start;gap:6px;">' +
-    '<div style="font-family:\'Space Mono\',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.4);margin-bottom:4px;">// PROGRESS</div>' +
-    '<div class="streak-num">' + _completedDays.length + '</div>' +
-    '<div class="streak-title" style="font-size:14px;">' + (_completedDays.length === 7 ? 'DAYS DONE' : 'OF 7 DAYS') + '</div>' +
-    '<div style="font-size:11px;color:var(--ink-md);margin-top:4px;">' + (_completedDays.length === 7 ? 'Challenge complete.' : (7 - _completedDays.length) + ' days to go.') + '</div></div></div>' +
+  // ── HEADER SUBLINE ──
+  const headerSub = allDone
+    ? 'CHALLENGE COMPLETE — 7 DAYS DONE'
+    : todayDone
+    ? 'TODAY DONE — COME BACK TOMORROW'
+    : 'CONSISTENCY STARTS HERE';
 
-    '<div class="progress-section"><div class="ps-tag">// 7-day challenge</div><div class="ps-h">YOUR WEEK</div>' +
-    '<div class="days-grid">' + dayCirclesHTML + '</div>' +
-    '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>' +
-    '<div class="progress-pct">' + _completedDays.length + ' of 7 days - ' + pct + '%</div></div>' +
+  const dayNumDisplay = todayTask ? todayTask.day_number : (completedN + 1);
 
-    '<div class="today-section"><div class="ts-tag">// Today\'s action</div><div class="ts-card">' +
-    '<div class="ts-status-row"><div class="ts-status-dot ' + (doneToday || allDone ? 'green' : streakBroken ? 'red' : 'amber') + '"></div>' +
-    '<div class="ts-status-text">' + (doneToday || allDone ? 'DAY ' + (allDone ? 7 : progress - 1) + ' COMPLETE' : 'DAY ' + progress + ' - WAITING FOR YOU') + '</div></div>' +
-    actionHTML + '</div></div>' + nextSection +
+  // ── ASSEMBLE ──
+  app.innerHTML = `
+    <div class="journey-header">
+      <div class="jh-bg">JOURNEY</div>
+      ${firstName ? `<div class="jh-name">// ${firstName.toUpperCase()}'S JOURNEY</div>` : '<div class="jh-tag">// Your progress</div>'}
+      <div class="jh-h">YOU'RE ON<br><em>DAY ${dayNumDisplay}.</em></div>
+      <div class="jh-sub">${headerSub}</div>
+    </div>
 
-    '<div class="chain-section"><div class="chain-h">DON\'T<br>BREAK<br>THE CHAIN.</div>' +
-    '<div class="chain-sub">// ' + _completedDays.length + ' of 7 days complete</div>' +
-    '<div class="chain-dots">' + chainDots + '</div></div>' +
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-label">// Streak</div>
+        <div class="stat-num">${streak}</div>
+        <div class="stat-title">${streak === 1 ? 'DAY IN A ROW' : streak === 0 ? 'BROKEN' : 'DAYS IN A ROW'}</div>
+        <div class="stat-msg">${streakMsg[Math.min(streak, streakMsg.length - 1)]}</div>
+      </div>
+      <div class="stat-cell dark">
+        <div class="stat-label">// Progress</div>
+        <div class="stat-num">${completedN}</div>
+        <div class="stat-title">${completedN === totalDays ? 'DAYS DONE' : 'OF ' + totalDays + ' DAYS'}</div>
+        <div class="stat-msg">${completedN === totalDays ? 'Challenge complete.' : (totalDays - completedN) + ' days remaining.'}</div>
+      </div>
+    </div>
 
-    '<footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div>' +
-    '<div class="footer-line">2025 Alpino Health Foods - Your journey, day by day</div></footer>';
+    <div class="progress-section">
+      <div class="ps-tag">// 7-day challenge</div>
+      <div class="ps-h">YOUR WEEK</div>
+      <div class="days-grid">${dayCirclesHTML}</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="progress-pct">${completedN} of ${totalDays} days — ${pct}%</div>
+    </div>
+
+    <div class="today-section">
+      <div class="ts-tag">// Today's action</div>
+      <div class="ts-card">${todayCardHTML}</div>
+    </div>
+
+    ${nextSectionHTML}
+    ${completeHookHTML}
+
+    <div class="chain-section">
+      <div class="chain-h">DON'T<br>BREAK<br>THE CHAIN.</div>
+      <div class="chain-sub">// ${completedN} of ${totalDays} days complete</div>
+      <div class="chain-dots">${chainDots}</div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-logo">AL<em>P</em>INO</div>
+      <div class="footer-line">© 2025 Alpino Health Foods — your journey, day by day</div>
+    </footer>
+  `;
 }
 
+// ── SHARE ─────────────────────────────────────────────────────────
 function shareProgress() {
-  if (!_user) return;
-  const text = 'Day ' + getProgress() + ' with Alpino peanut butter. Building the habit.';
-  if (navigator.share) { navigator.share({ title: 'My Alpino Journey', text: text }); }
-  else { navigator.clipboard.writeText(text).then(function() { showToast('Copied!'); }); }
+  const completedN = _state.tasks.filter(t => t.status === 'completed').length;
+  const text = completedN >= 7
+    ? 'I just completed the 7-day Alpino habit challenge. Built a real nutrition habit.'
+    : `Day ${_state.todayTask?.day_number || completedN} with Alpino. Building the protein habit.`;
+  if (navigator.share) {
+    navigator.share({ title: 'My Alpino Journey', text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+  }
 }
 
-loadApp();
+// ── BOOT ─────────────────────────────────────────────────────────
+loadApp().catch(err => {
+  console.error('[loadApp crash]', err);
+  document.getElementById('app').innerHTML = `
+    <div class="state-screen">
+      <div class="state-icon">⚠️</div>
+      <div class="state-h">Something went wrong</div>
+      <div class="state-sub">Try refreshing the page. If the problem persists, open the email link again.</div>
+    </div>`;
+});
 </script>
-
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
-  --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
-  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
-  --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
-  --white:#FDFAF5;
-}
-html{scroll-behavior:smooth;}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh;}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
-.nav-logo em{color:var(--amber);font-style:normal;}
-.nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;}
-.nav-streak .fire{font-size:14px;}
-.journey-header{background:var(--ink);padding:48px 40px 40px;position:relative;overflow:hidden;}
-.jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
-.jh-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:12px;}
-.jh-h{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:0.9;letter-spacing:1px;margin-bottom:8px;}
-.jh-h em{color:var(--amber);font-style:normal;}
-.jh-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.4);letter-spacing:2px;}
-.streak-section{background:var(--amber);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
-.streak-main{display:flex;align-items:flex-end;gap:16px;}
-.streak-num{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--ink);line-height:0.85;}
-.streak-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
-.streak-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);line-height:1;letter-spacing:1px;}
-.streak-msg{font-size:13px;color:rgba(28,28,26,0.65);margin-top:6px;max-width:260px;line-height:1.6;}
-.streak-broken{background:var(--ink);color:var(--amber);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;margin-top:8px;display:inline-block;}
-.streak-fire{font-size:48px;opacity:0.3;}
-.progress-section{background:var(--cream);padding:40px;}
-.ps-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
-.ps-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:24px;line-height:1;}
-.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
-.day-block{display:flex;flex-direction:column;align-items:center;gap:6px;}
-.day-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;position:relative;transition:all 0.2s;}
-.day-circle.done{background:var(--amber);color:var(--white);}
-.day-circle.done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--green);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
-.day-circle.today-active{background:var(--green);color:var(--white);box-shadow:0 0 0 3px var(--green-lt);cursor:pointer;}
-.day-circle.today-active:hover{background:var(--green-dk);}
-.day-circle.locked{background:var(--cream-border);color:var(--ink-lt);cursor:not-allowed;}
-.day-circle.today-done{background:var(--green);color:var(--white);}
-.day-circle.today-done::after{content:'✓';position:absolute;font-size:10px;bottom:-2px;right:-2px;background:var(--amber);color:var(--white);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
-.day-circle.missed{background:var(--cream-border);color:var(--ink-lt);opacity:0.5;}
-.day-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;text-align:center;}
-.day-label.active-label{color:var(--green-dk);font-weight:700;}
-.progress-bar-wrap{margin:20px 0 8px;background:var(--cream-border);height:6px;position:relative;}
-.progress-bar-fill{height:100%;background:var(--amber);transition:width 0.6s ease;}
-.progress-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:right;margin-top:4px;}
-.today-section{background:var(--cream-dk);padding:40px;}
-.ts-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
-.ts-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
-.ts-status-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.ts-status-dot{width:10px;height:10px;border-radius:50%;}
-.ts-status-dot.green{background:var(--green);}
-.ts-status-dot.amber{background:var(--amber);}
-.ts-status-dot.red{background:#c0392b;}
-.ts-status-text{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--ink-md);}
-.action-box{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;margin-bottom:20px;}
-.action-box-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px;}
-.action-box-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.2;}
-.mark-btn{width:100%;background:var(--green);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
-.mark-btn:hover{background:var(--green-dk);}
-.already-done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:14px;background:var(--green-lt);}
-
-/* ─── NEXT ACTION HOOK ─── */
-.next-section{background:var(--cream);padding:40px;}
-.next-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
-.next-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:20px;line-height:1;}
-.next-card{border:1px solid var(--cream-border);padding:24px;display:flex;gap:20px;align-items:flex-start;opacity:0.6;}
-.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:60px;flex-shrink:0;}
-.next-day-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--amber);line-height:1;}
-.next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;}
-.next-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;}
-.next-body{font-size:13px;color:var(--ink-md);line-height:1.75;}
-.next-lock{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;display:flex;align-items:center;gap:6px;}
-
-/* Completion next-action hook */
-.complete-hook{background:var(--green);padding:32px 40px;}
-.ch-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(228,240,232,0.5);letter-spacing:3px;margin-bottom:12px;}
-.ch-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
-.ch-body{font-size:13px;color:rgba(228,240,232,0.7);line-height:1.7;margin-bottom:20px;max-width:440px;}
-.ch-actions{display:flex;gap:12px;flex-wrap:wrap;}
-.ch-btn-primary{background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;}
-.ch-btn-primary:hover{background:var(--amber-dk);}
-.ch-btn-secondary{background:transparent;color:var(--green-lt);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 24px;border:1px solid rgba(228,240,232,0.3);cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:all 0.15s;}
-.ch-btn-secondary:hover{border-color:var(--green-lt);}
-
-.chain-section{background:var(--green);padding:40px;text-align:center;}
-.chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
-.chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(228,240,232,0.5);letter-spacing:2px;}
-.chain-dots{display:flex;justify-content:center;gap:8px;margin:20px 0;}
-.chain-dot{width:12px;height:12px;border-radius:50%;background:rgba(228,240,232,0.2);}
-.chain-dot.filled{background:var(--amber);}
-.chain-dot.missed{background:rgba(192,57,43,0.4);}
-.footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
-.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);letter-spacing:4px;}
-.footer-logo em{color:var(--amber);font-style:normal;}
-.footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1px;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;}
-.toast.show{transform:translateX(-50%) translateY(0);}
-.no-data{padding:80px 40px;text-align:center;}
-.no-data-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:16px;}
-.no-data-p{font-size:14px;color:var(--ink-md);margin-bottom:24px;}
-.no-data-btn{display:inline-block;background:var(--amber);color:var(--white);font-size:12px;font-weight:700;letter-spacing:1.5px;padding:14px 28px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;text-decoration:none;}
-@media(max-width:768px){
-  .nav{padding:0 18px;}.journey-header{padding:36px 18px 32px;}.jh-h{font-size:52px;}
-  .streak-section{padding:24px 18px;flex-direction:column;align-items:flex-start;gap:12px;}.streak-num{font-size:72px;}.streak-fire{display:none;}
-  .progress-section{padding:28px 18px;}.days-grid{gap:4px;}.day-circle{width:36px;height:36px;font-size:14px;}
-  .today-section{padding:28px 18px;}.next-section{padding:28px 18px;}.chain-section{padding:32px 18px;}
-  .complete-hook{padding:28px 18px;}.ch-actions{flex-direction:column;}
-  .footer{padding:20px 18px;flex-direction:column;gap:10px;text-align:center;}
-}
-</style>
-</head>
-<body>
-
-<nav class="nav">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="nav-logo">AL<em>P</em>INO</div>
-  </div>
-  <div class="nav-streak"><span class="fire">🔥</span><span id="navStreakText">—</span></div>
-</nav>
-
-<div id="app"></div>
-<div class="toast" id="toast"></div>
-
 </body>
 </html>

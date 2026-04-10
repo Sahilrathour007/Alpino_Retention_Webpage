@@ -260,76 +260,27 @@ async function loadApp() {
     return renderNoToken();
   }
 
-  const { data: tokenRow, error: tokenErr } = await _sb
-    .from('completion_tokens')
-    .select('task_id, user_id, used, expires_at')
-    .eq('token', _token)
-    .maybeSingle();
-
-  if (tokenErr || !tokenRow) {
+  // Single backend call — backend uses service key, bypasses RLS entirely
+  let data;
+  try {
+    const resp = await fetch(`${SERVER_BASE}/validate-token?t=${encodeURIComponent(_token)}`);
+    if (!resp.ok) return renderInvalidToken();
+    data = await resp.json();
+  } catch (err) {
+    console.error('[loadApp] validate-token fetch failed', err);
     return renderInvalidToken();
   }
 
-  const now = new Date();
   _state.token_valid   = true;
-  _state.token_used    = tokenRow.used === true;
-  _state.token_expired = new Date(tokenRow.expires_at) < now;
+  _state.token_used    = data.used === true;
+  _state.token_expired = data.expired === true;
+  _state.user          = data.user        || null;
+  _state.intent        = data.intent      || {};
+  _state.userState     = data.userState   || { current_streak: 0, longest_streak: 0, last_completed_day: 0, fatigue_score: 0 };
+  _state.tasks         = data.tasks       || [];
+  _state.todayTask     = data.todayTask   || null;
 
-  const { task_id, user_id } = tokenRow;
-
-  const { data: user } = await _sb
-    .from('users')
-    .select('id, name, email')
-    .eq('id', user_id)
-    .maybeSingle();
-
-  if (!user) return renderInvalidToken();
-  _state.user = user;
-
-  const { data: intent } = await _sb
-    .from('user_intent')
-    .select('goal, lifestyle, diet_pref')
-    .eq('user_id', user_id)
-    .maybeSingle();
-  _state.intent = intent || {};
-
-  const { data: userState } = await _sb
-    .from('user_state')
-    .select('current_streak, longest_streak, last_completed_day, last_completed_date, fatigue_score, active_plan_id')
-    .eq('user_id', user_id)
-    .maybeSingle();
-  _state.userState = userState || { current_streak: 0, longest_streak: 0, last_completed_day: 0, fatigue_score: 0 };
-
-  const planId = userState?.active_plan_id;
-  if (planId) {
-    const { data: tasks } = await _sb
-      .from('habit_tasks')
-      .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
-      .eq('plan_id', planId)
-      .eq('user_id', user_id)
-      .order('day_number', { ascending: true });
-
-    _state.tasks = tasks || [];
-  }
-
-  const { data: tokenTask } = await _sb
-    .from('habit_tasks')
-    .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
-    .eq('id', task_id)
-    .maybeSingle();
-
-  _state.todayTask = tokenTask;
-
-  if (_state.tasks.length === 0 && tokenTask && tokenTask.plan_id) {
-    const { data: allTasks } = await _sb
-      .from('habit_tasks')
-      .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
-      .eq('plan_id', tokenTask.plan_id)
-      .eq('user_id', user_id)
-      .order('day_number', { ascending: true });
-
-    _state.tasks = allTasks || [tokenTask];
-  }
+  if (!_state.user) return renderInvalidToken();
 
   renderJourney();
 }

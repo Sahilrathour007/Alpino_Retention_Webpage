@@ -3,31 +3,36 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Alpino · Start Day 1</title>
-<!-- Supabase SDK removed: data now flows through Render backend /signup endpoint -->
+<title>The Whole Truth · Start Day 1</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
+  --cream:#F5F0E8;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
   --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
-  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
+  --green:#2A5C3A;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
   --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
   --white:#FDFAF5;
 }
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink)}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:var(--white);border-bottom:2px solid var(--ink);position:sticky;top:0;z-index:200}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--ink)}
 .nav-logo em{color:var(--amber);font-style:normal}
-.nav-pill{background:var(--green);color:var(--green-lt);font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 9px;margin-left:10px;font-family:'Space Mono',monospace}
-.ticker{background:var(--green);padding:9px 0;overflow:hidden;white-space:nowrap}
+.nav-pill{background:var(--ink);color:var(--cream);font-size:9px;font-weight:700;letter-spacing:2px;padding:4px 10px;margin-left:10px;font-family:'Space Mono',monospace}
+
+/* ── TICKER ── */
+.ticker{background:var(--ink);padding:10px 0;overflow:hidden;white-space:nowrap}
 .tick-inner{display:inline-flex;gap:52px;animation:scrolltick 22s linear infinite}
-.tick-item{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--green-lt);letter-spacing:3px}
+.tick-item{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--cream);letter-spacing:3px}
 .tick-sep{color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:13px}
 @keyframes scrolltick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.hero{display:grid;grid-template-columns:55% 45%;min-height:520px;background:var(--cream)}
-.hero-l{padding:60px 48px 48px;display:flex;flex-direction:column;justify-content:center}
+
+/* ── HERO ── */
+.hero{display:grid;grid-template-columns:55% 45%;min-height:540px;background:var(--cream)}
+.hero-l{padding:64px 48px 48px;display:flex;flex-direction:column;justify-content:center}
 .hero-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .hero-tag::before{content:'';display:block;width:20px;height:1px;background:var(--amber)}
 .hero-h{font-family:'Bebas Neue',sans-serif;font-size:82px;line-height:0.9;letter-spacing:1px;color:var(--ink);margin-bottom:20px}
@@ -35,36 +40,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .hero-p{font-size:15px;color:var(--ink-md);line-height:1.78;max-width:390px;margin-bottom:28px}
 .hero-p strong{color:var(--ink)}
 .hero-form{display:flex;gap:0;margin-bottom:10px;max-width:380px}
-.hero-email-input{flex:1;background:var(--white);border:1.5px solid var(--cream-border);border-right:none;padding:14px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
+.hero-email-input{flex:1;background:var(--white);border:2px solid var(--ink);border-right:none;padding:14px 16px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
 .hero-email-input:focus{border-color:var(--amber)}
 .hero-email-input::placeholder{color:var(--ink-lt)}
-.hero-form-btn{background:var(--amber);color:var(--white);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:14px 20px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;white-space:nowrap;transition:background 0.15s}
-.hero-form-btn:hover{background:var(--amber-dk)}
+.hero-form-btn{background:var(--ink);color:var(--white);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:14px 20px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;white-space:nowrap;transition:background 0.15s}
+.hero-form-btn:hover{background:var(--amber)}
 .hero-form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-bottom:20px}
 .hero-trust{display:flex;gap:8px;flex-wrap:wrap}
-.trust-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--green-dk);background:var(--green-lt);padding:6px 10px}
+.trust-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--green-dk);background:var(--green-lt);padding:6px 10px;border:1px solid rgba(42,92,58,0.15)}
 .trust-chip::before{content:'✓';font-size:9px}
-.hero-r{background:var(--cream-dk);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px}
-.hero-bg-text{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:140px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%)}
-.jar{position:relative;display:flex;flex-direction:column;align-items:center}
-.jar-cap{width:188px;height:26px;background:var(--ink);display:flex;align-items:center;justify-content:center}
-.jar-cap-text{font-family:'Space Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:4px}
-.jar-body{width:170px;height:228px;background:var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-.jar-name{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--white);letter-spacing:5px;line-height:1}
-.jar-line{width:50px;height:1px;background:rgba(253,250,245,0.3);margin:4px 0}
-.jar-var{font-family:'Space Mono',monospace;font-size:7px;color:rgba(253,250,245,0.7);letter-spacing:2px;text-align:center;line-height:1.6}
-.jar-base{width:188px;height:14px;background:var(--amber-dk)}
-.badge-g{position:absolute;top:0;right:-14px;background:var(--green);padding:14px 12px;text-align:center}
-.badge-g .n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--green-lt);line-height:1}
-.badge-g .u{font-family:'Space Mono',monospace;font-size:7px;color:rgba(228,240,232,0.7);letter-spacing:1px;margin-top:3px}
-.badge-day{position:absolute;bottom:18px;left:-8px;background:var(--ink);padding:9px 12px;border-left:3px solid var(--amber)}
-.badge-day .dl{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.5);letter-spacing:1px}
-.badge-day .dv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);line-height:1;margin-top:2px;letter-spacing:2px}
-.how{padding:56px 40px;background:var(--cream)}
+
+/* ── HERO RIGHT — DOODLE ── */
+.hero-r{background:var(--cream-dk);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px;border-left:2px solid var(--cream-border)}
+.hero-bg-text{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:120px;color:rgba(28,28,26,0.04);letter-spacing:10px;pointer-events:none;white-space:nowrap;top:50%;left:50%;transform:translate(-50%,-50%)}
+.doodle-wrap{position:relative;width:100%;max-width:320px;}
+.doodle-badge{position:absolute;top:-10px;right:0;background:var(--amber);padding:12px 14px;text-align:center;z-index:2}
+.doodle-badge .n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);line-height:1}
+.doodle-badge .u{font-family:'Space Mono',monospace;font-size:7px;color:rgba(253,250,245,0.8);letter-spacing:1px;margin-top:2px}
+.doodle-tag{position:absolute;bottom:20px;left:-10px;background:var(--ink);padding:10px 14px;border-left:3px solid var(--amber);z-index:2}
+.doodle-tag .dl{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.5);letter-spacing:1px}
+.doodle-tag .dv{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);line-height:1;margin-top:2px;letter-spacing:2px}
+
+/* ── HOW IT WORKS ── */
+.how{padding:64px 40px;background:var(--cream);border-top:2px solid var(--ink)}
 .sec-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
-.sec-h{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--ink);margin-bottom:36px;line-height:1}
-.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--cream-border)}
-.step{background:var(--cream);padding:32px 24px;position:relative}
+.sec-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--ink);margin-bottom:36px;line-height:1}
+.steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--ink)}
+.step{background:var(--cream);padding:36px 28px;position:relative}
 .step:first-child{background:var(--amber)}
 .step-num{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;margin-bottom:14px}
 .step:first-child .step-num{color:rgba(28,28,26,0.12)}
@@ -74,50 +76,63 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .step:not(:first-child) .step-label{color:var(--amber)}
 .step-title{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--ink)}
 .step-body{font-size:13px;line-height:1.75}
-.step:first-child .step-body{color:rgba(28,28,26,0.6)}
+.step:first-child .step-body{color:rgba(28,28,26,0.65)}
 .step:not(:first-child) .step-body{color:var(--ink-md)}
-.step-arrow{position:absolute;top:32px;right:-1px;width:22px;height:22px;background:var(--amber);display:flex;align-items:center;justify-content:center;z-index:1}
-.step-arrow svg{width:10px;height:10px;fill:var(--white)}
+.step-arrow{position:absolute;top:36px;right:-1px;width:22px;height:22px;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:1}
+.step-arrow svg{width:10px;height:10px;fill:var(--cream)}
 .step:last-child .step-arrow{display:none}
-.proof{background:var(--cream-dk);padding:56px 40px}
+
+/* ── PROOF ── */
+.proof{background:var(--ink);padding:64px 40px;border-top:2px solid var(--amber)}
 .proof-inner{display:grid;grid-template-columns:1fr 2fr;gap:48px;align-items:center}
-.proof-count{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--amber);line-height:1}
-.proof-count-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:2px;margin-top:6px}
-.proof-count-sub{font-family:'Space Mono',monospace;font-size:8px;color:var(--ink-lt);letter-spacing:1px;margin-top:4px;opacity:0.6}
-.proof-card{background:var(--white);border:1px solid var(--cream-border);padding:28px}
+.proof-count{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--amber);line-height:1}
+.proof-count-label{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.4);letter-spacing:2px;margin-top:6px}
+.proof-count-sub{font-family:'Space Mono',monospace;font-size:8px;color:rgba(253,250,245,0.25);letter-spacing:1px;margin-top:4px}
+.proof-card{background:var(--cream);border:none;padding:32px}
 .proof-stars{display:flex;gap:3px;margin-bottom:14px}
 .star{width:10px;height:10px;background:var(--amber)}
 .proof-text{font-size:14px;color:var(--ink-md);line-height:1.8;font-style:italic;margin-bottom:18px}
 .proof-author{display:flex;align-items:center;gap:12px}
-.proof-avatar{width:32px;height:32px;border-radius:50%;background:var(--cream-dk);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-md)}
+.proof-avatar{width:36px;height:36px;border-radius:50%;background:var(--cream-dk);border:2px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink)}
 .proof-name{font-size:13px;font-weight:700;color:var(--ink)}
 .proof-meta{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px}
-.footer{background:var(--ink);padding:36px 40px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── PROMISE STRIP ── */
+.promise{background:var(--green);padding:40px;display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+.promise-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--green-lt);line-height:1;flex-shrink:0}
+.promise-items{display:flex;gap:20px;flex-wrap:wrap}
+.promise-item{font-family:'Space Mono',monospace;font-size:9px;color:rgba(228,240,232,0.8);letter-spacing:1.5px;display:flex;align-items:center;gap:6px}
+.promise-item::before{content:'✕';color:var(--amber);font-size:11px;font-weight:700}
+
+/* ── FOOTER ── */
+.footer{background:var(--ink);padding:40px;display:flex;align-items:center;justify-content:space-between;border-top:3px solid var(--amber)}
 .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:4px}
 .footer-logo em{color:var(--amber);font-style:normal}
 .footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1.5px}
 .footer-links{display:flex;gap:24px}
 .footer-links span{font-size:12px;color:rgba(253,250,245,0.4);cursor:pointer}
-.overlay{position:fixed;inset:0;background:rgba(28,28,26,0.82);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+
+/* ── OVERLAY / MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(28,28,26,0.85);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .overlay.active{display:flex}
-.modal{background:var(--cream);width:100%;max-width:460px;position:relative;overflow:hidden}
-.modal-header{background:var(--amber);padding:26px 30px 22px}
+.modal{background:var(--cream);width:100%;max-width:460px;position:relative;overflow:hidden;border:2px solid var(--ink)}
+.modal-header{background:var(--amber);padding:28px 30px 22px}
 .modal-header-tag{font-family:'Space Mono',monospace;font-size:9px;color:rgba(28,28,26,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.modal-header-h{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--ink);line-height:0.92;letter-spacing:1px}
+.modal-header-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;letter-spacing:1px}
 .modal-header-h span{color:var(--white)}
 .modal-body{padding:28px 30px}
 .modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:rgba(28,28,26,0.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink)}
 .form-step{display:none}
 .form-step.active{display:block}
 .field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px;display:block}
-.field-input{width:100%;background:var(--white);border:1.5px solid var(--cream-border);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
+.field-input{width:100%;background:var(--white);border:2px solid var(--ink);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;transition:border-color 0.15s}
 .field-input:focus{border-color:var(--amber)}
 .field-group{margin-bottom:18px}
 .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.choice-btn{background:var(--white);border:1.5px solid var(--cream-border);padding:13px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--ink-md);transition:all 0.15s;text-align:center}
+.choice-btn{background:var(--white);border:2px solid var(--cream-border);padding:13px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--ink-md);transition:all 0.15s;text-align:center}
 .choice-btn:hover,.choice-btn.selected{border-color:var(--amber);background:var(--amber-lt);color:var(--amber-dk)}
 .form-btn{width:100%;background:var(--ink);color:var(--white);font-size:13px;font-weight:700;letter-spacing:1.5px;padding:16px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;transition:background 0.15s;margin-top:8px}
-.form-btn:hover{background:#2e2e2a}
+.form-btn:hover{background:var(--amber)}
 .form-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:10px;text-align:center}
 .step-dots{display:flex;gap:6px;margin-bottom:20px}
 .dot{width:22px;height:3px;background:var(--cream-border)}
@@ -128,10 +143,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .confirm-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:14px}
 .confirm-h span{color:var(--amber)}
 .confirm-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:20px;max-width:300px;margin-left:auto;margin-right:auto}
-.day1-action{background:var(--ink);border-left:4px solid var(--amber);padding:16px 18px;text-align:left;margin-bottom:20px}
-.day1-action-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;margin-bottom:6px}
-.day1-action-text{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;line-height:1.15}
-.confirm-summary{background:var(--cream-dk);border:1px solid var(--cream-border);padding:14px 18px;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;line-height:2}
+.confirm-summary{background:var(--cream-dk);border:2px solid var(--ink);padding:14px 18px;text-align:left;margin-bottom:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;line-height:2}
 .confirm-summary strong{color:var(--amber)}
 .streak-bar{display:flex;gap:4px;margin-top:14px;margin-bottom:8px}
 .streak-day{flex:1;height:7px;background:var(--cream-border)}
@@ -144,28 +156,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .done-h{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--ink);line-height:0.92;margin-bottom:12px}
 .done-h span{color:var(--amber)}
 .done-p{font-size:13px;color:var(--ink-md);line-height:1.75;margin-bottom:8px;max-width:300px;margin-left:auto;margin-right:auto}
-.done-next{font-family:'Space Mono',monospace;font-size:9px;color:var(--green-dk);letter-spacing:1px;background:var(--green-lt);padding:10px 14px;margin:16px 0}
+.done-next{font-family:'Space Mono',monospace;font-size:9px;color:var(--green-dk);letter-spacing:1px;background:var(--green-lt);padding:10px 14px;margin:16px 0;border:1px solid rgba(42,92,58,0.2)}
 .redirect-wrap{margin:12px 0 8px}
 .redirect-bar-bg{width:100%;height:4px;background:var(--cream-border);overflow:hidden}
 .redirect-bar{height:100%;background:var(--green);width:0%}
 .redirect-note{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;margin-top:6px;margin-bottom:10px}
 .field-error{border-color:#c0392b!important}
 .error-msg{font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;margin-top:6px}
+.error-banner{margin-top:10px;font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;display:none}
+
 @media(max-width:768px){
   .nav{padding:0 18px}.nav-pill{display:none}.hero{grid-template-columns:1fr;min-height:auto}
-  .hero-l{padding:36px 18px 32px}.hero-h{font-size:64px}.hero-r{min-height:280px;padding:28px 18px}
+  .hero-l{padding:36px 18px 32px}.hero-h{font-size:64px}.hero-r{min-height:300px;padding:28px 18px}
   .hero-form{max-width:100%}.how{padding:44px 18px}.steps-grid{grid-template-columns:1fr}
   .step-arrow{display:none!important}.proof{padding:44px 18px}.proof-inner{grid-template-columns:1fr;gap:28px}
   .footer{padding:24px 18px;flex-direction:column;gap:14px;text-align:center}
   .footer-links{flex-wrap:wrap;justify-content:center}
+  .promise{padding:28px 18px;gap:20px}
 }
-.error-banner{margin-top:10px;font-family:'Space Mono',monospace;font-size:9px;color:#c0392b;letter-spacing:1px;display:none}
 </style>
 </head>
 <body>
+
 <nav class="nav">
   <div style="display:flex;align-items:center;gap:10px;">
-    <div class="nav-logo">AL<em>P</em>INO</div>
+    <div class="nav-logo">THE WHOLE <em>TRUTH</em>®</div>
     <span class="nav-pill">Day 1 Program</span>
   </div>
 </nav>
@@ -176,18 +191,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
     <span class="tick-item">Real Food. Not Supplements.</span><span class="tick-sep">•</span>
     <span class="tick-item">Takes Less Than 5 Minutes Daily</span><span class="tick-sep">•</span>
     <span class="tick-item">Free 7-Day Email Plan</span><span class="tick-sep">•</span>
+    <span class="tick-item">No Added Sugar. No Maida. No Lies.</span><span class="tick-sep">•</span>
     <span class="tick-item">No Gym Required</span><span class="tick-sep">•</span>
     <span class="tick-item">Real Food. Not Supplements.</span><span class="tick-sep">•</span>
     <span class="tick-item">Takes Less Than 5 Minutes Daily</span><span class="tick-sep">•</span>
-    <span class="tick-item">Free 7-Day Email Plan</span>
+    <span class="tick-item">Free 7-Day Email Plan</span><span class="tick-sep">•</span>
+    <span class="tick-item">No Added Sugar. No Maida. No Lies.</span>
   </div>
 </div>
 
 <section class="hero">
   <div class="hero-l">
-    <div class="hero-tag">Your first protein. The right way.</div>
-    <h1 class="hero-h">YOUR<br>FIRST<br><span class="a">PROTEIN.</span><br>MADE<br>SIMPLE.</h1>
-    <p class="hero-p">No confusion. No supplements. <strong>Just real food, one step at a time.</strong> We'll send you a simple daily plan — takes 2 minutes a day. That's it.</p>
+    <div class="hero-tag">Real food. No lies. Your first protein.</div>
+    <h1 class="hero-h">YOUR<br>FIRST<br><span class="a">PROTEIN.</span><br>DONE<br>RIGHT.</h1>
+    <p class="hero-p">No confusion. No supplements. <strong>Just real food, honest ingredients, one step at a time.</strong> We'll send you a simple daily plan — takes 2 minutes a day. That's it.</p>
     <div class="hero-form">
       <input class="hero-email-input" type="email" id="heroEmail" placeholder="yourname@gmail.com" />
       <button class="hero-form-btn" onclick="openModalWithEmail()">Start Day 1 →</button>
@@ -196,25 +213,124 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
     <div class="hero-form-note">Free · No credit card · Unsubscribe anytime</div>
     <div class="hero-trust">
       <div class="trust-chip">No gym required</div>
-      <div class="trust-chip">No complicated diet</div>
+      <div class="trust-chip">No added sugar</div>
       <div class="trust-chip">Under 5 min daily</div>
     </div>
   </div>
   <div class="hero-r">
     <div class="hero-bg-text">PROTEIN</div>
-    <div class="jar">
-      <div class="jar-cap"><span class="jar-cap-text">ALPINO HEALTH FOODS</span></div>
-      <div class="jar-body">
-        <div class="jar-name">ALPINO</div>
-        <div class="jar-line"></div>
-        <div class="jar-var">NATURAL CRUNCHY<br>PEANUT BUTTER</div>
-      </div>
-      <div class="jar-base"></div>
-      <div class="badge-g"><div class="n">30g</div><div class="u">protein/100g</div></div>
-      <div class="badge-day"><div class="dl">Your journey</div><div class="dv">STARTS<br>TODAY</div></div>
+    <div class="doodle-wrap">
+      <!-- Doodle Art: Fit man & woman eating protein food -->
+      <svg viewBox="0 0 320 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+        <!-- Background subtle lines -->
+        <line x1="0" y1="290" x2="320" y2="290" stroke="#D8CEBC" stroke-width="2"/>
+
+        <!-- WOMAN (left, holding bowl) -->
+        <!-- Body -->
+        <ellipse cx="90" cy="210" rx="28" ry="42" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Head -->
+        <circle cx="90" cy="150" r="26" fill="none" stroke="#1C1C1A" stroke-width="2.5"/>
+        <!-- Hair bun -->
+        <path d="M80 128 Q90 118 100 128" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="90" cy="120" r="9" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+        <!-- Face smile -->
+        <path d="M82 155 Q90 163 98 155" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <!-- Eyes -->
+        <circle cx="83" cy="148" r="2.5" fill="#1C1C1A"/>
+        <circle cx="97" cy="148" r="2.5" fill="#1C1C1A"/>
+        <!-- Left arm holding bowl -->
+        <path d="M65 195 Q48 188 44 200" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Right arm up with spoon -->
+        <path d="M115 195 Q130 175 125 162" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Bowl in left hand -->
+        <path d="M32 196 Q44 210 56 196" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="32" y1="196" x2="56" y2="196" stroke="#1C1C1A" stroke-width="2"/>
+        <!-- Peanut butter squiggle in bowl -->
+        <path d="M36 200 Q44 194 52 200" fill="none" stroke="#C47A3A" stroke-width="2" stroke-linecap="round"/>
+        <!-- Spoon in right hand -->
+        <ellipse cx="125" cy="157" rx="5" ry="8" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+        <!-- Legs -->
+        <path d="M72 248 Q68 265 65 280" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M108 248 Q112 265 115 280" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Shoes -->
+        <path d="M60 278 Q65 285 72 280" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <path d="M112 278 Q117 285 124 280" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <!-- Dress detail -->
+        <path d="M65 195 Q90 230 115 195" fill="none" stroke="#1C1C1A" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+        <!-- MAN (right, flexing with banana/bar) -->
+        <!-- Body -->
+        <ellipse cx="230" cy="205" rx="32" ry="45" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Shoulder definition -->
+        <path d="M200 185 Q215 175 230 178 Q245 175 260 185" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <!-- Head -->
+        <circle cx="230" cy="145" r="27" fill="none" stroke="#1C1C1A" stroke-width="2.5"/>
+        <!-- Short hair -->
+        <path d="M205 138 Q215 122 230 120 Q245 122 255 138" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Face smile big -->
+        <path d="M220 152 Q230 162 240 152" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Eyes wide happy -->
+        <circle cx="222" cy="143" r="3" fill="#1C1C1A"/>
+        <circle cx="238" cy="143" r="3" fill="#1C1C1A"/>
+        <!-- Eyebrow raised excited -->
+        <path d="M218 137 Q222 133 226 137" fill="none" stroke="#1C1C1A" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M234 137 Q238 133 242 137" fill="none" stroke="#1C1C1A" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Left arm curled flex -->
+        <path d="M200 185 Q175 175 172 155 Q175 140 185 145 Q178 155 183 162 Q190 170 200 185" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Right arm holding protein bar -->
+        <path d="M260 185 Q278 168 282 155" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Protein bar in hand -->
+        <rect x="276" y="140" width="28" height="14" rx="3" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+        <rect x="276" y="140" width="28" height="14" rx="3" fill="rgba(196,122,58,0.15)"/>
+        <text x="290" y="151" font-family="'Space Mono',monospace" font-size="5" fill="#C47A3A" text-anchor="middle" letter-spacing="0.5">PROTEIN</text>
+        <!-- Legs -->
+        <path d="M210" y1="245" fill="none"/>
+        <path d="M212 248 Q206 265 202 282" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M248 248 Q254 265 258 282" fill="none" stroke="#1C1C1A" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Sneakers -->
+        <path d="M196 280 Q202 288 212 283" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <path d="M254 280 Q260 288 270 283" fill="none" stroke="#1C1C1A" stroke-width="2" stroke-linecap="round"/>
+        <!-- Shorts -->
+        <path d="M200 205 Q212 230 230 228 Q248 230 260 205" fill="none" stroke="#1C1C1A" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+        <!-- Middle — floating protein elements -->
+        <!-- Heart with protein label -->
+        <path d="M155 115 Q160 107 165 115 Q175 105 175 120 Q175 132 160 142 Q145 132 145 120 Q145 105 155 115Z" fill="rgba(196,122,58,0.15)" stroke="#C47A3A" stroke-width="2"/>
+        <!-- Small dumbbell icon -->
+        <g transform="translate(148,55)">
+          <rect x="0" y="8" width="24" height="5" rx="1" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+          <rect x="-6" y="4" width="7" height="13" rx="2" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+          <rect x="23" y="4" width="7" height="13" rx="2" fill="none" stroke="#1C1C1A" stroke-width="2"/>
+        </g>
+        <!-- Stars / sparkles -->
+        <text x="148" y="95" font-size="14" fill="#C47A3A">✦</text>
+        <text x="168" y="78" font-size="10" fill="#2A5C3A">✦</text>
+        <text x="135" y="72" font-size="8" fill="#1C1C1A" opacity="0.4">✦</text>
+        <!-- "NO LIES" stamp -->
+        <circle cx="160" cy="25" r="18" fill="none" stroke="#2A5C3A" stroke-width="2" stroke-dasharray="4,2"/>
+        <text x="160" y="21" font-family="'Bebas Neue',sans-serif" font-size="8" fill="#2A5C3A" text-anchor="middle" letter-spacing="1">NO</text>
+        <text x="160" y="31" font-family="'Bebas Neue',sans-serif" font-size="8" fill="#2A5C3A" text-anchor="middle" letter-spacing="1">LIES</text>
+        <!-- Arrow pointing down between figures -->
+        <text x="155" y="175" font-family="'Space Mono',monospace" font-size="7" fill="#8A8780" text-anchor="middle">real food</text>
+        <text x="165" y="185" font-family="'Space Mono',monospace" font-size="7" fill="#8A8780" text-anchor="middle">every day</text>
+      </svg>
+      <div class="doodle-badge"><div class="n">30g</div><div class="u">protein/100g</div></div>
+      <div class="doodle-tag"><div class="dl">Your journey</div><div class="dv">STARTS<br>TODAY</div></div>
     </div>
   </div>
 </section>
+
+<!-- No Lies Promise Strip -->
+<div class="promise">
+  <div class="promise-h">WHAT WE<br>NEVER ADD.</div>
+  <div class="promise-items">
+    <div class="promise-item">No Added Sugar</div>
+    <div class="promise-item">No Maida</div>
+    <div class="promise-item">No Preservatives</div>
+    <div class="promise-item">No Artificial Flavours</div>
+    <div class="promise-item">No Hidden Nasties</div>
+  </div>
+</div>
 
 <section class="how">
   <p class="sec-tag">// The plan</p>
@@ -223,19 +339,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
     <div class="step" style="position:relative;">
       <div class="step-num">01</div><div class="step-label">Right now</div>
       <div class="step-title">Enter your email</div>
-      <div class="step-body">Answer 3 quick questions. We personalise your plan instantly — by goal, lifestyle, and diet preference.</div>
+      <div class="step-body">Answer 3 quick questions. We personalise your plan instantly — by goal, lifestyle, and diet preference. Every ingredient, explained.</div>
       <div class="step-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="square"/></svg></div>
     </div>
     <div class="step" style="position:relative;">
       <div class="step-num">02</div><div class="step-label">Inbox, Day 1</div>
       <div class="step-title">Get your daily plan</div>
-      <div class="step-body">Short, skimmable, actionable. One thing to do each morning. Read it while your chai brews.</div>
+      <div class="step-body">Short, honest, actionable. One thing to do each morning. No fine print. Read it while your chai brews.</div>
       <div class="step-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="square"/></svg></div>
     </div>
     <div class="step">
       <div class="step-num">03</div><div class="step-label">By week 2</div>
       <div class="step-title">Build your habit</div>
-      <div class="step-body">Seven days in, protein is no longer confusing. You've built your first real nutrition habit. From here, everything gets easier.</div>
+      <div class="step-body">Seven days in, protein is no longer confusing. You've built your first real nutrition habit — with food that tells the truth.</div>
     </div>
   </div>
 </section>
@@ -259,11 +375,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 </section>
 
 <footer class="footer">
-  <div class="footer-logo">AL<em>P</em>INO</div>
-  <div class="footer-line">© 2025 Alpino Health Foods · Surat, Gujarat · Powered by Junagadh Peanuts</div>
+  <div class="footer-logo">THE WHOLE <em>TRUTH</em>®</div>
+  <div class="footer-line">© 2025 The Whole Truth Foods · Real food. No lies. That's it.</div>
   <div class="footer-links"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
 </footer>
 
+<!-- MODAL -->
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -479,8 +596,6 @@ function goStep3(){
 }
 
 async function markDone(){
-  // Sends email + goal + lifestyle + diet_pref to Render backend /signup
-  // Server handles Supabase write, habit plan generation, and Day 1 email via Resend
   const BACKEND_URL = 'https://wholetruth.onrender.com';
 
   const saveError = document.getElementById('saveError');
@@ -497,12 +612,11 @@ async function markDone(){
     return;
   }
 
-  localStorage.setItem('alpino_user_email', email);
+  localStorage.setItem('wholetruth_user_email', email);
 
   const btn = document.querySelector('#step3 .form-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
-  // Map frontend goal values to what server.js /signup expects
   const goalMap = {
     weight_loss:    'lose_weight',
     muscle_gain:    'gain_muscle',
@@ -513,8 +627,8 @@ async function markDone(){
   const payload = {
     email,
     goal:      goalMap[selectedGoal] || selectedGoal,
-    lifestyle: selectedLifestyle,   // sedentary | active | athlete — exact match
-    diet_pref: selectedDietPref,    // veg | non_veg | vegan — exact match
+    lifestyle: selectedLifestyle,
+    diet_pref: selectedDietPref,
   };
 
   try {
@@ -524,7 +638,6 @@ async function markDone(){
       body:    JSON.stringify(payload),
     });
 
-    // Render free tier can be cold — 50s+ delay. Give it time.
     const data = await res.json();
 
     if (res.ok && data.success) {
@@ -564,7 +677,7 @@ function startRedirectCountdown(){
 
 function goToJourney(){
   const email = normalizeEmail(capturedEmail || document.getElementById('emailInput').value);
-  window.location.href = `alpino_journey.html?email=${encodeURIComponent(email)}`;
+  window.location.href = `wholetruth_journey.html?email=${encodeURIComponent(email)}`;
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });

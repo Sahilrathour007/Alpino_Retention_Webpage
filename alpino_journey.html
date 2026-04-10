@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alpino · Your Journey</title>
+<title>The Whole Truth · Your Journey</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --cream:#F6F1E9;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
+  --cream:#F5F0E8;--cream-dk:#EDE6D8;--cream-border:#D8CEBC;
   --amber:#C47A3A;--amber-dk:#A35F20;--amber-lt:#F0D4A8;
-  --green:#2A6640;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
+  --green:#2A5C3A;--green-dk:#1D4D2E;--green-lt:#E4F0E8;
   --ink:#1C1C1A;--ink-md:#4A4845;--ink-lt:#8A8780;
   --white:#FDFAF5;--red:#c0392b;
 }
@@ -19,10 +19,10 @@ html{scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh;}
 
 /* ── NAV ── */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:var(--cream);border-bottom:1px solid var(--cream-border);position:sticky;top:0;z-index:200;}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ink);}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:var(--white);border-bottom:2px solid var(--ink);position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--ink);}
 .nav-logo em{color:var(--amber);font-style:normal;}
-.nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;}
+.nav-streak{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);background:var(--green-lt);padding:6px 12px;letter-spacing:1px;border:1px solid rgba(42,92,58,0.2);}
 .nav-streak .fire{font-size:14px;}
 
 /* ── LOADING / ERROR STATES ── */
@@ -35,16 +35,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── JOURNEY HEADER ── */
-.journey-header{background:var(--ink);padding:48px 40px 40px;position:relative;overflow:hidden;}
-.jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.06);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
+.journey-header{background:var(--ink);padding:52px 40px 44px;position:relative;overflow:hidden;border-bottom:3px solid var(--amber);}
+.jh-bg{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:180px;color:rgba(196,122,58,0.05);letter-spacing:10px;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;}
 .jh-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:12px;}
 .jh-h{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);line-height:0.9;letter-spacing:1px;margin-bottom:8px;}
 .jh-h em{color:var(--amber);font-style:normal;}
 .jh-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.4);letter-spacing:2px;}
 .jh-name{font-family:'Space Mono',monospace;font-size:11px;color:rgba(253,250,245,0.55);letter-spacing:2px;margin-bottom:10px;}
 
-/* ── STREAK + PROGRESS STAT GRID ── */
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--cream-border);}
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--ink);}
 .stat-cell{background:var(--amber);padding:28px 32px;display:flex;flex-direction:column;gap:4px;}
 .stat-cell.dark{background:var(--ink);}
 .stat-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(28,28,26,0.45);text-transform:uppercase;}
@@ -56,8 +56,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .stat-msg{font-size:11px;color:rgba(28,28,26,0.6);margin-top:2px;line-height:1.5;}
 .stat-cell.dark .stat-msg{color:rgba(253,250,245,0.4);}
 
-/* ── 7-DAY PROGRESS SECTION ── */
-.progress-section{background:var(--cream);padding:40px;}
+/* ── 7-DAY PROGRESS ── */
+.progress-section{background:var(--cream);padding:40px;border-top:2px solid var(--cream-border);}
 .ps-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
 .ps-h{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);margin-bottom:24px;line-height:1;}
 .days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
@@ -77,10 +77,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .progress-bar-fill{height:100%;background:var(--amber);transition:width 0.6s ease;}
 .progress-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink-lt);letter-spacing:1px;text-align:right;margin-top:4px;}
 
-/* ── TODAY'S TASK SECTION ── */
-.today-section{background:var(--cream-dk);padding:40px;}
+/* ── TODAY'S TASK ── */
+.today-section{background:var(--cream-dk);padding:40px;border-top:2px solid var(--cream-border);}
 .ts-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
-.ts-card{background:var(--white);border:1px solid var(--cream-border);padding:28px;}
+.ts-card{background:var(--white);border:2px solid var(--ink);padding:28px;}
 .ts-status-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
 .ts-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .ts-status-dot.green{background:var(--green);}
@@ -90,7 +90,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 
 /* Task type badge */
 .task-type-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;font-weight:700;border-left:3px solid;}
-.task-type-badge.easy{background:rgba(42,100,64,0.08);border-color:var(--green);color:var(--green-dk);}
+.task-type-badge.easy{background:rgba(42,92,58,0.08);border-color:var(--green);color:var(--green-dk);}
 .task-type-badge.push{background:rgba(196,122,58,0.1);border-color:var(--amber);color:var(--amber-dk);}
 .task-type-badge.push_high{background:rgba(196,122,58,0.15);border-color:var(--amber-dk);color:var(--amber-dk);}
 .task-type-badge.recovery{background:rgba(74,158,255,0.1);border-color:#4A9EFF;color:#1a5fa8;}
@@ -109,7 +109,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .mark-btn .btn-icon{font-size:16px;}
 
 /* Already done message */
-.done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:18px;background:var(--green-lt);border:1px solid rgba(42,100,64,0.2);}
+.done-msg{text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--green-dk);letter-spacing:1px;padding:18px;background:var(--green-lt);border:1px solid rgba(42,92,58,0.2);}
 
 /* Missed / no task states */
 .missed-msg{text-align:center;padding:20px;background:rgba(192,57,43,0.06);border-left:3px solid var(--red);}
@@ -117,11 +117,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .missed-msg strong{color:var(--red);}
 
 /* ── NEXT DAY PREVIEW ── */
-.next-section{background:var(--cream);padding:40px;}
+.next-section{background:var(--cream);padding:40px;border-top:2px solid var(--cream-border);}
 .next-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:3px;margin-bottom:16px;}
 .next-h{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ink);margin-bottom:16px;line-height:1;}
-.next-card{border:1px solid var(--cream-border);padding:20px 24px;display:flex;gap:18px;align-items:flex-start;opacity:0.65;}
-.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:56px;flex-shrink:0;}
+.next-card{border:2px solid var(--ink);padding:20px 24px;display:flex;gap:18px;align-items:flex-start;opacity:0.65;}
+.next-day-badge{background:var(--cream-dk);padding:10px 14px;text-align:center;min-width:56px;flex-shrink:0;border:1px solid var(--cream-border);}
 .next-day-num{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amber);line-height:1;}
 .next-day-label{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink-lt);letter-spacing:1px;margin-top:2px;}
 .next-info{}
@@ -140,22 +140,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 .ch-btn-secondary:hover{border-color:var(--green-lt);}
 
 /* ── CHAIN SECTION ── */
-.chain-section{background:var(--green);padding:40px;text-align:center;}
-.chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green-lt);line-height:1;margin-bottom:8px;}
-.chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(228,240,232,0.5);letter-spacing:2px;}
+.chain-section{background:var(--ink);padding:40px;text-align:center;border-top:3px solid var(--amber);}
+.chain-h{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--white);line-height:1;margin-bottom:8px;}
+.chain-sub{font-family:'Space Mono',monospace;font-size:10px;color:rgba(253,250,245,0.35);letter-spacing:2px;}
 .chain-dots{display:flex;justify-content:center;gap:8px;margin:20px 0;}
-.chain-dot{width:14px;height:14px;border-radius:50%;background:rgba(228,240,232,0.2);transition:background 0.3s;}
+.chain-dot{width:14px;height:14px;border-radius:50%;background:rgba(253,250,245,0.1);transition:background 0.3s;}
 .chain-dot.filled{background:var(--amber);}
 .chain-dot.missed{background:rgba(192,57,43,0.45);}
 
 /* ── FOOTER ── */
-.footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;}
+.footer{background:var(--ink);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;border-top:2px solid rgba(253,250,245,0.08);}
 .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);letter-spacing:4px;}
 .footer-logo em{color:var(--amber);font-style:normal;}
 .footer-line{font-family:'Space Mono',monospace;font-size:9px;color:rgba(253,250,245,0.3);letter-spacing:1px;}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;pointer-events:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;padding:14px 24px;z-index:999;transition:transform 0.3s ease;white-space:nowrap;pointer-events:none;border-left:3px solid var(--amber);}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.error{background:var(--red);}
 
@@ -175,7 +175,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 <body>
 
 <nav class="nav">
-  <div class="nav-logo">AL<em>P</em>INO</div>
+  <div class="nav-logo">THE WHOLE <em>TRUTH</em>®</div>
   <div class="nav-streak"><span class="fire">🔥</span><span id="navStreakText">—</span></div>
 </nav>
 
@@ -189,16 +189,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 
 <script>
 // ================================================================
-// ALPINO JOURNEY PAGE v4.1
-// Fix 1: tasks array bootstrapped from token task when active_plan_id is null
-// Fix 2: markTaskDone pushes to tasks array if not found (idx === -1)
+// THE WHOLE TRUTH — JOURNEY PAGE v4.1
 // ================================================================
 
 // ── CONFIG ──────────────────────────────────────────────────────
 const SUPABASE_URL  = 'https://cwgkibigjhzjoyumfjfh.supabase.co';
 const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2tpYmlnamh6am95dW1mamZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNjY4NTIsImV4cCI6MjA1OTg0Mjg1Mn0.Ov7VDPEqFV-GnA2yVdpBG_Bv_VL_q0_jXFNuA11nJNY';
 
-// Server endpoint
 const SERVER_BASE   = 'https://wholetruth.onrender.com';
 
 const _sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
@@ -263,7 +260,6 @@ async function loadApp() {
     return renderNoToken();
   }
 
-  // Step 1: Validate token
   const { data: tokenRow, error: tokenErr } = await _sb
     .from('completion_tokens')
     .select('task_id, user_id, used, expires_at')
@@ -281,7 +277,6 @@ async function loadApp() {
 
   const { task_id, user_id } = tokenRow;
 
-  // Step 2: Load user
   const { data: user } = await _sb
     .from('users')
     .select('id, name, email')
@@ -291,7 +286,6 @@ async function loadApp() {
   if (!user) return renderInvalidToken();
   _state.user = user;
 
-  // Step 3: Load user_intent
   const { data: intent } = await _sb
     .from('user_intent')
     .select('goal, lifestyle, diet_pref')
@@ -299,7 +293,6 @@ async function loadApp() {
     .maybeSingle();
   _state.intent = intent || {};
 
-  // Step 4: Load user_state
   const { data: userState } = await _sb
     .from('user_state')
     .select('current_streak, longest_streak, last_completed_day, last_completed_date, fatigue_score, active_plan_id')
@@ -307,7 +300,6 @@ async function loadApp() {
     .maybeSingle();
   _state.userState = userState || { current_streak: 0, longest_streak: 0, last_completed_day: 0, fatigue_score: 0 };
 
-  // Step 5: Load all tasks for active plan (if active_plan_id exists)
   const planId = userState?.active_plan_id;
   if (planId) {
     const { data: tasks } = await _sb
@@ -320,7 +312,6 @@ async function loadApp() {
     _state.tasks = tasks || [];
   }
 
-  // Step 6: Load today's task (always from token's task_id, include plan_id)
   const { data: tokenTask } = await _sb
     .from('habit_tasks')
     .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
@@ -329,8 +320,6 @@ async function loadApp() {
 
   _state.todayTask = tokenTask;
 
-  // FIX 1: If tasks array is empty (active_plan_id was null in user_state),
-  // bootstrap by loading all tasks using the plan_id from the token task itself.
   if (_state.tasks.length === 0 && tokenTask && tokenTask.plan_id) {
     const { data: allTasks } = await _sb
       .from('habit_tasks')
@@ -378,7 +367,6 @@ async function markTaskDone() {
       if (resp.status === 410) {
         _state.token_used = true;
         _state.todayTask.status = 'completed';
-        // FIX 2: ensure tasks array reflects completion
         const idx410 = _state.tasks.findIndex(t => t.id === _state.todayTask.id);
         if (idx410 !== -1) {
           _state.tasks[idx410].status = 'completed';
@@ -394,7 +382,6 @@ async function markTaskDone() {
 
     const result = await resp.json();
 
-    // Update local state immediately
     _state.token_used = true;
     _state.todayTask.status = 'completed';
     _state.todayTask.completed_at = new Date().toISOString();
@@ -405,8 +392,6 @@ async function markTaskDone() {
       _state.userState.last_completed_date = new Date().toISOString();
     }
 
-    // FIX 2: Update tasks array — if task not found (was empty before bootstrap),
-    // push it so progress counter and day circles update correctly.
     const idx = _state.tasks.findIndex(t => t.id === _state.todayTask.id);
     if (idx !== -1) {
       _state.tasks[idx].status = 'completed';
@@ -435,9 +420,9 @@ function renderNoToken() {
     <div class="state-screen">
       <div class="state-icon">📬</div>
       <div class="state-h">Check Your Email</div>
-      <div class="state-sub">Open the daily habit email from Alpino and tap the "Mark as Done" button inside it to reach your journey page.</div>
+      <div class="state-sub">Open the daily habit email from The Whole Truth and tap the "Mark as Done" button inside it to reach your journey page.</div>
     </div>
-    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">Your journey, day by day</div></footer>
+    <footer class="footer"><div class="footer-logo">THE WHOLE <em>TRUTH</em>®</div><div class="footer-line">Your journey, day by day</div></footer>
   `;
 }
 
@@ -446,9 +431,9 @@ function renderInvalidToken() {
     <div class="state-screen">
       <div class="state-icon">🔗</div>
       <div class="state-h">Link Not Found</div>
-      <div class="state-sub">This link is invalid or has expired. Check your latest Alpino habit email for a fresh link.</div>
+      <div class="state-sub">This link is invalid or has expired. Check your latest The Whole Truth habit email for a fresh link.</div>
     </div>
-    <footer class="footer"><div class="footer-logo">AL<em>P</em>INO</div><div class="footer-line">Your journey, day by day</div></footer>
+    <footer class="footer"><div class="footer-logo">THE WHOLE <em>TRUTH</em>®</div><div class="footer-line">Your journey, day by day</div></footer>
   `;
 }
 
@@ -468,7 +453,6 @@ function renderJourney() {
     "One more day left.", "7 days done. You built this."];
   const firstName   = user?.name ? user.name.split(' ')[0] : '';
 
-  // Nav streak
   const navEl = document.getElementById('navStreakText');
   if (navEl) navEl.textContent = streak > 0 ? streak + '-day streak' : (completedN > 0 ? 'Keep going' : 'Day 1');
 
@@ -584,7 +568,7 @@ function renderJourney() {
       <div class="complete-hook">
         <div class="ch-tag">// 7-day habit built</div>
         <div class="ch-h">YOU BUILT<br>A HABIT.</div>
-        <div class="ch-body">7 days of intentional nutrition. Most people quit at Day 3. You finished.</div>
+        <div class="ch-body">7 days of intentional nutrition. Most people quit at Day 3. You finished. That's The Whole Truth.</div>
         <div class="ch-actions">
           <button class="ch-btn-primary" onclick="shareProgress()">Share my achievement</button>
         </div>
@@ -626,7 +610,7 @@ function renderJourney() {
         <div class="stat-label">// Progress</div>
         <div class="stat-num">${completedN}</div>
         <div class="stat-title">${completedN === totalDays ? 'DAYS DONE' : 'OF ' + totalDays + ' DAYS'}</div>
-        <div class="stat-msg">${completedN === totalDays ? 'Challenge complete.' : (totalDays - completedN) + ' days remaining.'}</div>
+        <div class="stat-msg">${completedN === totalDays ? 'Challenge complete. The whole truth.' : (totalDays - completedN) + ' days remaining.'}</div>
       </div>
     </div>
 
@@ -655,8 +639,8 @@ function renderJourney() {
     </div>
 
     <footer class="footer">
-      <div class="footer-logo">AL<em>P</em>INO</div>
-      <div class="footer-line">© 2025 Alpino Health Foods — your journey, day by day</div>
+      <div class="footer-logo">THE WHOLE <em>TRUTH</em>®</div>
+      <div class="footer-line">© 2025 The Whole Truth Foods — your journey, day by day</div>
     </footer>
   `;
 }
@@ -665,10 +649,10 @@ function renderJourney() {
 function shareProgress() {
   const completedN = _state.tasks.filter(t => t.status === 'completed').length;
   const text = completedN >= 7
-    ? 'I just completed the 7-day Alpino habit challenge. Built a real nutrition habit.'
-    : `Day ${_state.todayTask?.day_number || completedN} with Alpino. Building the protein habit.`;
+    ? 'I just completed the 7-day The Whole Truth habit challenge. Built a real nutrition habit. No lies.'
+    : `Day ${_state.todayTask?.day_number || completedN} with The Whole Truth. Building the protein habit. Real food. No lies.`;
   if (navigator.share) {
-    navigator.share({ title: 'My Alpino Journey', text });
+    navigator.share({ title: 'My Whole Truth Journey', text });
   } else {
     navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
   }

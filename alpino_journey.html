@@ -189,20 +189,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);o
 
 <script>
 // ================================================================
-// ALPINO JOURNEY PAGE v4
-// Auth: token-based (t= URL param from email link)
-// Data: Supabase direct query using anon key
-// Completion: POST to server /complete-task endpoint
-// Immutability: completed days are locked in UI and blocked server-side
+// ALPINO JOURNEY PAGE v4.1
+// Fix 1: tasks array bootstrapped from token task when active_plan_id is null
+// Fix 2: markTaskDone pushes to tasks array if not found (idx === -1)
 // ================================================================
 
 // ── CONFIG ──────────────────────────────────────────────────────
 const SUPABASE_URL  = 'https://cwgkibigjhzjoyumfjfh.supabase.co';
-const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2tpYmlnamh6am95dW1mamZoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA5NzM0NCwiZXhwIjoyMDkwNjczMzQ0fQ.Oqyj24Cm7Bo3VKyWxiArBPn3Af0gN9M13gZHC-KDCKM';
+const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2tpYmlnamh6am95dW1mamZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNjY4NTIsImV4cCI6MjA1OTg0Mjg1Mn0.Ov7VDPEqFV-GnA2yVdpBG_Bv_VL_q0_jXFNuA11nJNY';
 
-// Server endpoint — your Railway/Render backend
-// Update this if your server URL changes
-const SERVER_BASE = 'https://wholetruth.onrender.com';
+// Server endpoint
+const SERVER_BASE   = 'https://wholetruth.onrender.com';
 
 const _sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 const _urlParams = new URLSearchParams(window.location.search);
@@ -211,11 +208,11 @@ const _token = (_urlParams.get('t') || '').trim();
 // ── STATE ────────────────────────────────────────────────────────
 let _state = {
   token:       _token,
-  user:        null,      // { id, name, email }
-  intent:      null,      // { goal, lifestyle, diet_pref }
-  userState:   null,      // { current_streak, longest_streak, last_completed_day, last_completed_date, fatigue_score }
-  tasks:       [],        // all habit_tasks for active plan, sorted by day_number
-  todayTask:   null,      // the task for today
+  user:        null,
+  intent:      null,
+  userState:   null,
+  tasks:       [],
+  todayTask:   null,
   token_valid: false,
   token_used:  false,
   token_expired: false,
@@ -241,10 +238,9 @@ function showToast(msg, isError) {
 }
 
 function getISTDateStr(date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(date || new Date());
+  const d = date || new Date();
+  return new Date(d.getTime() + (5.5 * 3600000))
+    .toISOString().slice(0, 10);
 }
 
 function isToday(dateStr) {
@@ -263,12 +259,11 @@ function calcStreakLive(userState) {
 
 // ── LOAD APP ─────────────────────────────────────────────────────
 async function loadApp() {
-  // Case 1: No token at all
   if (!_token) {
     return renderNoToken();
   }
 
-  // Step 1: Validate token against completion_tokens table
+  // Step 1: Validate token
   const { data: tokenRow, error: tokenErr } = await _sb
     .from('completion_tokens')
     .select('task_id, user_id, used, expires_at')
@@ -312,12 +307,12 @@ async function loadApp() {
     .maybeSingle();
   _state.userState = userState || { current_streak: 0, longest_streak: 0, last_completed_day: 0, fatigue_score: 0 };
 
-  // Step 5: Load all tasks for active plan
+  // Step 5: Load all tasks for active plan (if active_plan_id exists)
   const planId = userState?.active_plan_id;
   if (planId) {
     const { data: tasks } = await _sb
       .from('habit_tasks')
-      .select('id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
+      .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
       .eq('plan_id', planId)
       .eq('user_id', user_id)
       .order('day_number', { ascending: true });
@@ -325,16 +320,28 @@ async function loadApp() {
     _state.tasks = tasks || [];
   }
 
-  // Step 6: Identify today's task (the one this token belongs to)
+  // Step 6: Load today's task (always from token's task_id, include plan_id)
   const { data: tokenTask } = await _sb
     .from('habit_tasks')
-    .select('id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
+    .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
     .eq('id', task_id)
     .maybeSingle();
 
   _state.todayTask = tokenTask;
 
-  // Render
+  // FIX 1: If tasks array is empty (active_plan_id was null in user_state),
+  // bootstrap by loading all tasks using the plan_id from the token task itself.
+  if (_state.tasks.length === 0 && tokenTask && tokenTask.plan_id) {
+    const { data: allTasks } = await _sb
+      .from('habit_tasks')
+      .select('id, plan_id, day_number, task_type, scheduled_date, status, description, dosage, completion_type, completed_at')
+      .eq('plan_id', tokenTask.plan_id)
+      .eq('user_id', user_id)
+      .order('day_number', { ascending: true });
+
+    _state.tasks = allTasks || [tokenTask];
+  }
+
   renderJourney();
 }
 
@@ -342,7 +349,6 @@ async function loadApp() {
 async function markTaskDone() {
   if (_state.isMarking) return;
 
-  // Guard: token already used or expired
   if (_state.token_used) {
     showToast('Already marked complete ✅');
     return;
@@ -361,7 +367,6 @@ async function markTaskDone() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div>'; }
 
   try {
-    // POST to server /complete-task — server validates token + marks DB
     const resp = await fetch(SERVER_BASE + '/complete-task', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -370,10 +375,16 @@ async function markTaskDone() {
 
     if (!resp.ok) {
       const body = await resp.json().catch(() => ({}));
-      // 410 = already marked — treat as success UI-wise
       if (resp.status === 410) {
         _state.token_used = true;
         _state.todayTask.status = 'completed';
+        // FIX 2: ensure tasks array reflects completion
+        const idx410 = _state.tasks.findIndex(t => t.id === _state.todayTask.id);
+        if (idx410 !== -1) {
+          _state.tasks[idx410].status = 'completed';
+        } else {
+          _state.tasks.push({ ..._state.todayTask, status: 'completed' });
+        }
         renderJourney();
         showToast('Already marked complete ✅');
         return;
@@ -394,9 +405,14 @@ async function markTaskDone() {
       _state.userState.last_completed_date = new Date().toISOString();
     }
 
-    // Update tasks array
+    // FIX 2: Update tasks array — if task not found (was empty before bootstrap),
+    // push it so progress counter and day circles update correctly.
     const idx = _state.tasks.findIndex(t => t.id === _state.todayTask.id);
-    if (idx !== -1) _state.tasks[idx].status = 'completed';
+    if (idx !== -1) {
+      _state.tasks[idx].status = 'completed';
+    } else {
+      _state.tasks.push({ ..._state.todayTask, status: 'completed' });
+    }
 
     renderJourney();
     showToast('Day ' + _state.todayTask.day_number + ' done. Don\'t break the chain.');
@@ -561,7 +577,7 @@ function renderJourney() {
     }
   }
 
-  // ── COMPLETE HOOK (all 7 done) ──
+  // ── COMPLETE HOOK ──
   let completeHookHTML = '';
   if (allDone) {
     completeHookHTML = `
@@ -578,14 +594,10 @@ function renderJourney() {
       <div class="complete-hook" style="background:var(--green-dk);">
         <div class="ch-tag">// Day ${todayTask ? todayTask.day_number : ''} complete</div>
         <div class="ch-h">COME BACK<br>TOMORROW.</div>
-        <div class="ch-body">Your next task arrives tomorrow morning. Don't break the chain — ${totalDays - completedN} day${totalDays - completedN !== 1 ? 's' : ''} to go.</div>
-        <div class="ch-actions">
-          <button class="ch-btn-secondary" onclick="shareProgress()">Share my streak</button>
-        </div>
+        <div class="ch-body">One day at a time. Your next task arrives tomorrow morning.</div>
       </div>`;
   }
 
-  // ── HEADER SUBLINE ──
   const headerSub = allDone
     ? 'CHALLENGE COMPLETE — 7 DAYS DONE'
     : todayDone
